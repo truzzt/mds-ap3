@@ -56,7 +56,7 @@ subprojects {
         repositories {
             maven {
                 name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/truzzt/edc-logging-house-client")
+                url = uri("https://maven.pkg.github.com/truzzt/mds-ap3")
                 credentials {
                     username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
                     password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
