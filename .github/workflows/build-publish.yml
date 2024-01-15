@@ -21,4 +21,5 @@ jobs:
         with:
           arguments: publish
         env:
+          USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
