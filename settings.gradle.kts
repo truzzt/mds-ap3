@@ -1,3 +1,3 @@
-rootProject.name = "."
+rootProject.name = ""
 
 include(":logging-house-client")
