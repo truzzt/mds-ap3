@@ -1,3 +1,3 @@
-rootProject.name = "edc-logging-house-client"
+rootProject.name = "."
 
 include(":logging-house-client")
