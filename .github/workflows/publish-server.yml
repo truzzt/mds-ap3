@@ -1,7 +1,8 @@
 name: Publish-Server
 on:
   push:
-    branches: ["feat/logging-house-server"]
+    branches: ["main"]
+    paths: ["logging-house-server/**/*"]
 
 jobs:
   publish-app:
