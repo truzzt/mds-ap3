@@ -89,7 +89,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="configuration.html"><strong aria-hidden="true">1.</strong> Configuration</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Use</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.</strong> Developing</div></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="configuration.html"><strong aria-hidden="true">1.</strong> Configuration</a></li><li class="chapter-item expanded "><a href="clients.html"><strong aria-hidden="true">2.</strong> Clients</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">3.</strong> Use</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.</strong> Developing</div></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -183,6 +183,38 @@
 <ul>
 <li><a href="https://ids-basecamp.github.io/clearinghouse/content/admin-guide/ch-app_installation.html">Configuration</a></li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="clients"><a class="header" href="#clients">Clients</a></h1>
+<h2 id="java-edc-extension"><a class="header" href="#java-edc-extension">Java EDC Extension</a></h2>
+<h3 id="integrating-with-maven-repository"><a class="header" href="#integrating-with-maven-repository">Integrating with Maven Repository</a></h3>
+<p>To use the Maven package from our repository, update your <code>build.gradle.kts</code> with the following repository configuration:</p>
+<pre><code class="language-kotlin">repositories {
+    mavenCentral()
+    maven {
+        url = uri(&quot;https://maven.pkg.github.com/truzzt/mds-ap3&quot;)
+        credentials {
+            username = project.findProperty(&quot;gpr.user&quot;) as String? ?: System.getenv(&quot;USERNAME&quot;)
+            password = project.findProperty(&quot;gpr.key&quot;) as String? ?: System.getenv(&quot;TOKEN&quot;)
+        }
+    }
+}
+</code></pre>
+<p>This configuration includes the necessary Maven repository for our package and sets up authentication using either project properties or environment variables.</p>
+<h3 id="setting-up-authentication"><a class="header" href="#setting-up-authentication">Setting Up Authentication</a></h3>
+<p>To access our public Maven repository, authentication is required. Please follow the detailed <a href="https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry#authenticating-to-github-packages">GitHub Packages with Apache Maven documentation</a> for guidance on setting up authentication.</p>
+<h3 id="adding-the-dependency"><a class="header" href="#adding-the-dependency">Adding the Dependency</a></h3>
+<p>Once the repository is added and authentication is configured, you can include the package in your dependencies:</p>
+<pre><code class="language-kotlin">dependencies {
+    implementation(&quot;logging-house:logging-house-client:0.1.0&quot;)
+}
+</code></pre>
+<h3 id="environment-configuration"><a class="header" href="#environment-configuration">Environment Configuration</a></h3>
+<p>The <code>logging-house-client</code> relies on two key environment variables for configuration:</p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>CLEARINGHOUSE_CLIENT_EXTENSION_ENABLED</code></td><td><code>false</code></td><td>Set to <code>true</code> to enable the extension, or <code>false</code> to disable it.</td></tr>
+<tr><td><code>EDC_CLEARINGHOUSE_LOG_URL</code></td><td><code>none</code></td><td>Specify the URL of the Logging-House-Server (e.g., <code>clearing.demo.truzzt.eu</code>).</td></tr>
+</tbody></table>
+</div>
+<p>Ensure these environment variables are set as per your requirements for optimal functionality of the client.</p>
 
                     </main>
 
