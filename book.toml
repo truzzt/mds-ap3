@@ -1,0 +1,6 @@
+[book]
+authors = ["M.Schoenenberg, D.Hommen"]
+language = "en"
+multilingual = false
+src = "docs"
+title = "Documentation"
