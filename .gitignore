@@ -8,3 +8,4 @@
 build
 
 extensions
+node_modules/
