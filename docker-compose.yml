@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  edc:
+    image: ghcr.io/truzzt/mds-ap3/edc:0.1.0
+    environment:
+      WEB_HTTP_PORT: 
+      WEB_HTTP_PATH: 
+      WEB_HTTP_IDS_PORT: 
+      WEB_HTTP_IDS_PATH: 
+      MY_EDC_FQDN:  
+      MY_EDC_NAME_KEBAB_CASE: 
+      MY_EDC_TITLE: 
+      MY_EDC_DESCRIPTION: 
+      MY_EDC_CURATOR_URL: 
+      MY_EDC_CURATOR_NAME: 
+      EDC_API_AUTH_KEY: 
+      MY_EDC_MAINTAINER_URL: 
+      MY_EDC_MAINTAINER_NAME: 
+      EDC_OAUTH_TOKEN_URL: 
+      EDC_OAUTH_PROVIDER_JWKS_URL: 
+      EDC_OAUTH_PROVIDER_AUDIENCE: 
+      EDC_OAUTH_CLIENT_ID: 
+      EDC_KEYSTORE: 
+      EDC_KEYSTORE_PASSWORD: 
+      EDC_VAULT: 
+      EDC_OAUTH_CERTIFICATE_ALIAS: 
+      EDC_OAUTH_PRIVATE_KEY_ALIAS: 
+      TRUZZT_CLEARINGHOUSE_JWT_AUDIENCE: 
+      TRUZZT_CLEARINGHOUSE_JWT_ISSUER: 
+      TRUZZT_CLEARINGHOUSE_JWT_SIGN_SECRET: 
+      TRUZZT_CLEARINGHOUSE_JWT_EXPIRES_AT: 
+      TRUZZT_CLEARINGHOUSE_APP_BASE_URL: http://app:8000
+
+  app:
+    image: ghcr.io/truzzt/mds-ap3/app:0.1.0
+    environment:
+      SHARED_SECRET: 
+      SERVICE_ID_LOG: 
+
+  mongodb:
+    image: mongo:5
+    environment: 
+        MONGO_INITDB_DATABASE: process
+
