@@ -1,0 +1,47 @@
+name: Publish-Server
+on:
+  push:
+    branches: ["main"]
+    paths: ["logging-house-server/**/*"]
+
+jobs:
+  publish-app:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Login to GitHub Container Registry
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build Docker image
+        run: cd logging-house-server/app && docker build -t ghcr.io/truzzt/mds-ap3/app:0.1.0 .
+
+      - name: Push Docker image
+        run: docker push ghcr.io/truzzt/mds-ap3/app:0.1.0
+
+
+  publish-edc:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Login to GitHub Container Registry
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build Docker image
+        run: cd logging-house-server/edc && docker build -t ghcr.io/truzzt/mds-ap3/edc:0.1.0 .
+
+      - name: Push Docker image
+        run: docker push ghcr.io/truzzt/mds-ap3/edc:0.1.0

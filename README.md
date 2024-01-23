@@ -22,7 +22,7 @@ npm install
 ## Usage
 
 ```sh
-docker run
+docker compose up
 ```
 
 ## Run tests
