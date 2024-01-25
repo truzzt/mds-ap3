@@ -13,20 +13,11 @@
 
 package com.truzzt.extension.logginghouse.client;
 
-/*import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
-import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;*/
-//import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.runtime.metamodel.annotation.Setting;
 import org.eclipse.edc.spi.EdcException;
-//import org.eclipse.edc.spi.event.EventRouter;
-//import org.eclipse.edc.spi.http.EdcHttpClient;
-//import org.eclipse.edc.spi.iam.IdentityService;
-//import org.eclipse.edc.spi.message.RemoteMessageDispatcherRegistry;
 import org.eclipse.edc.spi.monitor.Monitor;
-//import org.eclipse.edc.spi.system.Hostname;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
-//import org.eclipse.edc.spi.types.TypeManager;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -34,7 +25,7 @@ import java.util.Map;
 
 public class LoggingHouseClientExtension implements ServiceExtension {
 
-    public static final String CATALOG_TRANSFER_EXTENSION = "LoggingHouseClientExtension";
+    public static final String LOGGINGHOUSE_CLIENT_EXTENSION = "LoggingHouseClientExtension";
     private static final String TYPE_MANAGER_SERIALIZER_KEY = "ids-clearinghouse";
 
     private static final Map<String, String> CONTEXT_MAP = Map.of(
@@ -45,47 +36,15 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     public static final String CLEARINGHOUSE_LOG_URL_SETTING = "edc.clearinghouse.log.url";
 
     @Setting
-    private static final String CLEARINGHOUSE_CLIENT_EXTENSION_ENABLED = "clearinghouse.client.extension.enabled";
-
-    /*@Inject
-    private IdsApiConfiguration idsApiConfiguration;
-
-    @Inject
-    private RemoteMessageDispatcherRegistry dispatcherRegistry;
-
-    @Inject
-    private IdentityService identityService;
-
-    @Inject
-    private IdsTransformerRegistry transformerRegistry;
-
-    @Inject
-    private ContractNegotiationStore contractNegotiationStore;
-
-    @Inject
-    private TransferProcessStore transferProcessStore;
-
-    @Inject
-    private Hostname hostname;
-
-    @Inject
-    private EdcHttpClient edcHttpClient;
-
-    @Inject
-    private DynamicAttributeTokenService dynamicAttributeTokenService;
-
-    @Inject
-    private EventRouter eventRouter;
-
-    private IdsClearingHouseService idsClearingHouseService;*/
+    public static final String CLEARINGHOUSE_CLIENT_EXTENSION_ENABLED = "clearinghouse.client.extension.enabled";
 
     private URL clearingHouseLogUrl;
-    private Monitor monitor;
+    public Monitor monitor;
 
 
     @Override
     public String name() {
-        return CATALOG_TRANSFER_EXTENSION;
+        return LOGGINGHOUSE_CLIENT_EXTENSION;
     }
 
     @Override
