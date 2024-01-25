@@ -1,4 +1,4 @@
-name: Publish package to GitHub Packages
+name: Build and Publish EDC Extension
 on:
   push:
     branches: ["main"]
@@ -7,7 +7,7 @@ on:
     branches: ["main"]
 
 jobs:
-  publish:
+  build-and-publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
