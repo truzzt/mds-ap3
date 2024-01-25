@@ -7,8 +7,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 
-import static org.mockito.Mockito.*;
-
 class LoggingHouseClientExtensionTest {
 
     private LoggingHouseClientExtension extension;
