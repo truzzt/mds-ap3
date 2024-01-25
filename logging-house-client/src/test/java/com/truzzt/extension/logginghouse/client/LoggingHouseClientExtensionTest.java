@@ -1,7 +1,7 @@
+import com.truzzt.extension.logginghouse.client.LoggingHouseClientExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import com.truzzt.extension.logginghouse.client.LoggingHouseClientExtension;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
