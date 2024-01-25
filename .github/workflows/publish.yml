@@ -1,0 +1,78 @@
+name: Build and Publish
+
+on:
+  release:
+    types: [published]
+
+env:
+  REGISTRY: ghcr.io/truzzt/mds-ap3
+  DOCKER_USERNAME: ${{ github.actor }}
+  DOCKER_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+  IMAGE_TAG: ${{ github.event.release.name }}
+
+jobs:
+  build-and-publish-server:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: ['app', 'edc']
+
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Login to GitHub Container Registry
+        run: echo $DOCKER_PASSWORD | docker login $REGISTRY -u $DOCKER_USERNAME --password-stdin
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build and Push Docker image
+        run: |
+          cd logging-house-server/${{ matrix.component }}
+          docker build -t $REGISTRY/${{ matrix.component }}:$IMAGE_TAG .
+          docker push $REGISTRY/${{ matrix.component }}:$IMAGE_TAG
+
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: $REGISTRY/${{ matrix.component }}:$IMAGE_TAG
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+
+  build-and-publish-edc-extension:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@ccb4328a959376b642e027874838f60f8e596de3
+      - name: Publish 
+        uses: gradle/gradle-build-action@749f47bda3e44aa060e82d7b3ef7e40d953bd629
+        with:
+          arguments: -Pversion=$IMAGE_TAG publish
+        env:
+          USERNAME: ${{ github.actor }}
+          TOKEN: ${{ github.token }}
+
