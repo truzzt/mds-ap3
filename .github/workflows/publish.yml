@@ -71,7 +71,7 @@ jobs:
       - name: Publish 
         uses: gradle/gradle-build-action@749f47bda3e44aa060e82d7b3ef7e40d953bd629
         with:
-          arguments: -Pversion=$IMAGE_TAG publish
+          arguments: -Pversion=${{ env.IMAGE_TAG }} publish
         env:
           USERNAME: ${{ github.actor }}
           TOKEN: ${{ github.token }}
