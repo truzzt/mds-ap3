@@ -1,9 +1,10 @@
+import com.truzzt.extension.logginghouse.client.LoggingHouseClientExtension;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import com.truzzt.extension.logginghouse.client.LoggingHouseClientExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 
 import static org.mockito.Mockito.*;
