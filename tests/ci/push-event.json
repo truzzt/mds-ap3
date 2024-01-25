@@ -1,0 +1,19 @@
+
+{
+  "ref": "refs/heads/alpha",
+  "head_commit": {
+    "id": "83bcd01b840bf2339e4cd03b2498a47fd47ce5e7",
+    "message": "feat: this is a test",
+    "timestamp": "Commit timestamp",
+    "author": {
+      "name": "Author Name",
+      "email": "author@example.com"
+    }
+  },
+  "repository": {
+    "name": "mds-ap3",
+    "owner": {
+      "name": "truzzt"
+    }
+  }
+}
