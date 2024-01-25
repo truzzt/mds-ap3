@@ -7,6 +7,7 @@ plugins {
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+    testImplementation("org.mockito:mockito-core:3.6.28")
 }
 
 val downloadArtifact: Configuration by configurations.creating {
@@ -32,20 +33,14 @@ allprojects {
 
     checkstyle {
         toolVersion = "10.9.3"
-        configFile = rootProject.file("docs/dev/checkstyle/checkstyle-config.xml")
-        configDirectory.set(rootProject.file("docs/dev/checkstyle"))
+        configFile = rootProject.file("checkstyle/checkstyle-config.xml")
+        configDirectory.set(rootProject.file("checkstyle"))
         maxErrors = 0 // does not tolerate errors
     }
 
     repositories {
         mavenCentral()
         mavenLocal()
-        maven {
-            url = uri("https://maven.iais.fraunhofer.de/artifactory/eis-ids-public/")
-        }
-        maven {
-            url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
-        }
     }
 }
 
@@ -57,7 +52,7 @@ subprojects {
             maven {
                 name = "GitHubPackages"
                 url = uri("https://maven.pkg.github.com/truzzt/mds-ap3")
-                version = "0.1.0"
+                version = "0.1.1"
                 credentials {
                     username = System.getenv("USERNAME")
                     password = System.getenv("TOKEN")
