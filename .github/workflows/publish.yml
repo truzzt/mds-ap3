@@ -3,7 +3,7 @@ on:
   push:
     branches: ["main"]
     paths: ["logging-house-client/**/*"]
-  pull_reqeust:
+  pull_request:
     branches: ["main"]
 
 jobs:
