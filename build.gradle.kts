@@ -41,8 +41,15 @@ allprojects {
     repositories {
         mavenCentral()
         mavenLocal()
-        flatDir {
-            dirs("${rootDir}/libs/fraunhofer")
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/ids-basecamp/ids-infomodel-java")
+                credentials {
+                    username = System.getenv("USERNAME")
+                    password = System.getenv("TOKEN")
+                }
+            }
         }
     }
 }

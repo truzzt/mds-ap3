@@ -19,8 +19,8 @@ dependencies {
     implementation("org.json:json:${jsonVersion}")
     implementation("org.glassfish.jersey.media:jersey-media-multipart:3.1.3")
 
-    implementation(":infomodel-java-4.1.3")
-    implementation(":infomodel-util-4.0.4")
+    implementation("de.fraunhofer.iais.eis.ids.infomodel:infomodel-java:1.0.2-basecamp")
+    implementation("de.fraunhofer.iais.eis.ids.infomodel:infomodel-util:1.0.2-basecamp")
 
     testImplementation("org.assertj:assertj-core:${assertj}")
     testImplementation("org.junit.jupiter:junit-jupiter-api:${jupiterVersion}")
