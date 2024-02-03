@@ -64,12 +64,12 @@ public class LoggingHouseClientExtension implements ServiceExtension {
             "ids", "https://w3id.org/idsa/core/",
             "idsc", "https://w3id.org/idsa/code/");
     @Setting
-    public static final String CLEARINGHOUSE_LOG_URL_SETTING = "edc.clearinghouse.log.url";
+    public static final String LOGGINGHOUSE_LOG_URL_SETTING = "edc.logginghouse.extension.url";
 
     @Setting
-    public static final String CLEARINGHOUSE_CLIENT_EXTENSION_ENABLED = "clearinghouse.client.extension.enabled";
+    public static final String LOGGINGHOUSE_CLIENT_EXTENSION_ENABLED = "edc.logginghouse.extension.enabled";
 
-    private URL clearingHouseLogUrl;
+    private URL loggingHouseLogUrl;
     public Monitor monitor;
 
 
@@ -81,7 +81,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     @Override
     public void initialize(ServiceExtensionContext context) {
         monitor = context.getMonitor();
-        var extensionEnabled = context.getSetting(CLEARINGHOUSE_CLIENT_EXTENSION_ENABLED, false);
+        var extensionEnabled = context.getSetting(LOGGINGHOUSE_CLIENT_EXTENSION_ENABLED, true);
 
         if (!extensionEnabled) {
             monitor.info("Logginghouse client extension is disabled.");
@@ -89,22 +89,22 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         }
         monitor.info("Logginghouse client extension is enabled.");
 
-        clearingHouseLogUrl = readUrlFromSettings(context, CLEARINGHOUSE_LOG_URL_SETTING);
+        loggingHouseLogUrl = readUrlFromSettings(context);
     }
 
-    private URL readUrlFromSettings(ServiceExtensionContext context, String settingsPath) {
+    private URL readUrlFromSettings(ServiceExtensionContext context) {
         try {
-            var urlString = context.getSetting(settingsPath, null);
+            var urlString = context.getSetting(LoggingHouseClientExtension.LOGGINGHOUSE_LOG_URL_SETTING, null);
             if (urlString == null) {
                 throw new EdcException(String.format("Could not initialize " +
                         "LoggingHouseClientExtension: " +
-                        "No url specified using setting %s", settingsPath));
+                        "No url specified using setting %s", LoggingHouseClientExtension.LOGGINGHOUSE_LOG_URL_SETTING));
             }
 
             return new URL(urlString);
         } catch (MalformedURLException e) {
             throw new EdcException(String.format("Could not parse setting %s to Url",
-                    settingsPath), e);
+                    LoggingHouseClientExtension.LOGGINGHOUSE_LOG_URL_SETTING), e);
         }
     }
 
@@ -112,7 +112,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         var eventSubscriber = new IdsClearingHouseServiceImpl(
                 dispatcherRegistry,
                 hostname,
-                clearingHouseLogUrl,
+                loggingHouseLogUrl,
                 contractNegotiationStore,
                 transferProcessStore,
                 monitor);

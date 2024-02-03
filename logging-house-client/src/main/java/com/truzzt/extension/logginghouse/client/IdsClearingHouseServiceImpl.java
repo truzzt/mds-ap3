@@ -94,14 +94,18 @@ public class IdsClearingHouseServiceImpl implements EventSubscriber {
             if (event.getPayload() instanceof ContractNegotiationFinalized contractNegotiationFinalized) {
                 var contractAgreement = resolveContractAgreement(contractNegotiationFinalized);
                 var pid = contractAgreement.getId();
-                var extendedUrl = new URL(clearingHouseLogUrl + "/" + pid);
 
-                createProcess(contractAgreement, clearingHouseLogUrl);
-                logContractAgreement(contractAgreement, extendedUrl);
+                // Create Process
+                var extendedProcessUrl = new URL(clearingHouseLogUrl + "/process/" + pid);
+                createProcess(contractAgreement, extendedProcessUrl);
+
+                // Log Contract Agreement
+                var extendedLogUrl = new URL(clearingHouseLogUrl + "/messages/log/" + pid);
+                logContractAgreement(contractAgreement, extendedLogUrl);
             } else if (event.getPayload() instanceof TransferProcessTerminated transferProcessTerminated) {
                 var transferProcess = resolveTransferProcess(transferProcessTerminated);
                 var pid = transferProcess.getContractId();
-                var extendedUrl = new URL(clearingHouseLogUrl + "/" + pid);
+                var extendedUrl = new URL(clearingHouseLogUrl + "/messages/log/" + pid);
                 logTransferProcess(transferProcess, extendedUrl);
             }
         } catch (Exception e) {

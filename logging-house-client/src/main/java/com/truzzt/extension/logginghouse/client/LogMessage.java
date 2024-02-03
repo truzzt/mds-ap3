@@ -9,6 +9,7 @@
  *
  *  Contributors:
  *       sovity GmbH - initial API and implementation
+ *       truzzt GmbH - adjusted for EDC 0.x
  *
  */
 
