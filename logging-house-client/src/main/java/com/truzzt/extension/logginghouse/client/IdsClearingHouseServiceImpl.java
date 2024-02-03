@@ -71,19 +71,19 @@ public class IdsClearingHouseServiceImpl implements EventSubscriber {
         processOwners.add(contractAgreement.getConsumerId());
         processOwners.add(contractAgreement.getProviderId());
 
-        monitor.info("Creating Process to ClearingHouse");
+        monitor.info("Creating Process in LoggingHouse");
         var logMessage = new CreateProcessMessage(clearingHouseLogUrl, connectorBaseUrl, contractAgreement.getId(), processOwners);
         dispatcherRegistry.dispatch(Object.class, logMessage);
     }
 
     public void logContractAgreement(ContractAgreement contractAgreement, URL clearingHouseLogUrl) {
-        monitor.info("Logging contract agreement to ClearingHouse");
+        monitor.info("Logging contract agreement to LoggingHouse");
         var logMessage = new LogMessage(clearingHouseLogUrl, connectorBaseUrl, contractAgreement);
         dispatcherRegistry.dispatch(Object.class, logMessage);
     }
 
     public void logTransferProcess(TransferProcess transferProcess, URL clearingHouseLogUrl) {
-        monitor.info("Logging transferprocess to ClearingHouse");
+        monitor.info("Logging transferprocess to LoggingHouse");
         var logMessage = new LogMessage(clearingHouseLogUrl, connectorBaseUrl, transferProcess);
         dispatcherRegistry.dispatch(Object.class, logMessage);
     }
