@@ -13,9 +13,14 @@ val jsonVersion: String by project
 
 dependencies {
     implementation("${edcGroup}:control-plane-core:${edcVersion}")
+    implementation("${edcGroup}:http-spi:${edcVersion}")
 
     implementation("com.squareup.okhttp3:okhttp:${okHttpVersion}")
     implementation("org.json:json:${jsonVersion}")
+    implementation("org.glassfish.jersey.media:jersey-media-multipart:3.1.3")
+
+    implementation(":infomodel-java-4.1.3")
+    implementation(":infomodel-util-4.0.4")
 
     testImplementation("org.assertj:assertj-core:${assertj}")
     testImplementation("org.junit.jupiter:junit-jupiter-api:${jupiterVersion}")

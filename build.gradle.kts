@@ -41,6 +41,9 @@ allprojects {
     repositories {
         mavenCentral()
         mavenLocal()
+        flatDir {
+            dirs("${rootDir}/libs/fraunhofer")
+        }
     }
 }
 
