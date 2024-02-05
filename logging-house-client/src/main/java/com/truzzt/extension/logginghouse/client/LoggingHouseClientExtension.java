@@ -15,8 +15,15 @@ package com.truzzt.extension.logginghouse.client;
 
 import com.truzzt.extension.logginghouse.client.ids.jsonld.JsonLd;
 import com.truzzt.extension.logginghouse.client.ids.multipart.IdsMultipartSender;
+import de.fraunhofer.iais.eis.LogMessage;
+import de.fraunhofer.iais.eis.RequestMessage;
+import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAccepted;
+import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAgreed;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationFinalized;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
+import org.eclipse.edc.connector.transfer.spi.event.TransferProcessCompleted;
+import org.eclipse.edc.connector.transfer.spi.event.TransferProcessInitiated;
+import org.eclipse.edc.connector.transfer.spi.event.TransferProcessStarted;
 import org.eclipse.edc.connector.transfer.spi.event.TransferProcessTerminated;
 import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
@@ -129,7 +136,12 @@ public class LoggingHouseClientExtension implements ServiceExtension {
                 monitor);
 
         eventRouter.registerSync(ContractNegotiationFinalized.class, eventSubscriber);
+        eventRouter.registerSync(ContractNegotiationAgreed.class, eventSubscriber);
+        eventRouter.registerSync(ContractNegotiationAccepted.class, eventSubscriber);
+        eventRouter.registerSync(TransferProcessCompleted.class, eventSubscriber);
         eventRouter.registerSync(TransferProcessTerminated.class, eventSubscriber);
+        eventRouter.registerSync(TransferProcessInitiated.class, eventSubscriber);
+        eventRouter.registerSync(TransferProcessStarted.class, eventSubscriber);
         context.registerService(IdsClearingHouseServiceImpl.class, eventSubscriber);
 
         monitor.debug("Registered event subscriber for LoggingHouseClientExtension");
@@ -149,8 +161,8 @@ public class LoggingHouseClientExtension implements ServiceExtension {
 
         typeManager.registerSerializer(TYPE_MANAGER_SERIALIZER_KEY, LogMessage.class,
                 new MultiContextJsonLdSerializer<>(LogMessage.class, CONTEXT_MAP));
-        typeManager.registerSerializer(TYPE_MANAGER_SERIALIZER_KEY, CreateProcessMessage.class,
-                new MultiContextJsonLdSerializer<>(CreateProcessMessage.class, CONTEXT_MAP));
+        typeManager.registerSerializer(TYPE_MANAGER_SERIALIZER_KEY, RequestMessage.class,
+                new MultiContextJsonLdSerializer<>(RequestMessage.class, CONTEXT_MAP));
 
         monitor.debug("Registered serializers for LoggingHouseClientExtension");
     }
