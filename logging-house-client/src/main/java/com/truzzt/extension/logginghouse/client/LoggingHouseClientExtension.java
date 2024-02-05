@@ -118,6 +118,8 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     }
 
     private void registerEventSubscriber(ServiceExtensionContext context) {
+        monitor.debug("Registering event subscriber for LoggingHouseClientExtension");
+
         var eventSubscriber = new IdsClearingHouseServiceImpl(
                 dispatcherRegistry,
                 hostname,
@@ -129,21 +131,33 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         eventRouter.registerSync(ContractNegotiationFinalized.class, eventSubscriber);
         eventRouter.registerSync(TransferProcessTerminated.class, eventSubscriber);
         context.registerService(IdsClearingHouseServiceImpl.class, eventSubscriber);
+
+        monitor.debug("Registered event subscriber for LoggingHouseClientExtension");
     }
 
     private void registerSerializerClearingHouseMessages(ServiceExtensionContext context) {
+        monitor.debug("Registering serializers for LoggingHouseClientExtension");
+
         typeManager.registerContext(TYPE_MANAGER_SERIALIZER_KEY, JsonLd.getObjectMapper());
         registerCommonTypes(typeManager);
+
+        monitor.debug("Registered serializers for LoggingHouseClientExtension");
     }
 
     private void registerCommonTypes(TypeManager typeManager) {
+        monitor.debug("Registering serializers for LoggingHouseClientExtension");
+
         typeManager.registerSerializer(TYPE_MANAGER_SERIALIZER_KEY, LogMessage.class,
                 new MultiContextJsonLdSerializer<>(LogMessage.class, CONTEXT_MAP));
         typeManager.registerSerializer(TYPE_MANAGER_SERIALIZER_KEY, CreateProcessMessage.class,
                 new MultiContextJsonLdSerializer<>(CreateProcessMessage.class, CONTEXT_MAP));
+
+        monitor.debug("Registered serializers for LoggingHouseClientExtension");
     }
 
     private void registerClearingHouseMessageSenders(ServiceExtensionContext context) {
+        monitor.debug("Registering message senders for LoggingHouseClientExtension");
+
         var httpClient = context.getService(EdcHttpClient.class);
         var monitor = context.getMonitor();
         var objectMapper = typeManager.getMapper(TYPE_MANAGER_SERIALIZER_KEY);
