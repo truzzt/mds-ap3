@@ -72,6 +72,8 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     private URL loggingHouseLogUrl;
     public Monitor monitor;
 
+    private boolean enabled;
+
 
     @Override
     public String name() {
@@ -84,12 +86,19 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         var extensionEnabled = context.getSetting(LOGGINGHOUSE_CLIENT_EXTENSION_ENABLED, true);
 
         if (!extensionEnabled) {
+            enabled = false;
             monitor.info("Logginghouse client extension is disabled.");
             return;
         }
+        enabled = true;
         monitor.info("Logginghouse client extension is enabled.");
 
         loggingHouseLogUrl = readUrlFromSettings(context);
+
+        registerSerializerClearingHouseMessages(context);
+        registerClearingHouseMessageSenders(context);
+
+        registerEventSubscriber(context);
     }
 
     private URL readUrlFromSettings(ServiceExtensionContext context) {
@@ -153,7 +162,11 @@ public class LoggingHouseClientExtension implements ServiceExtension {
 
     @Override
     public void start() {
-        monitor.info("Starting Logginghouse client extension.");
+        if (!enabled) {
+            monitor.info("Skipping start of Logginghouse client extension (disabled).");
+        } else {
+            monitor.info("Starting Logginghouse client extension.");
+        }
     }
 
     @Override
