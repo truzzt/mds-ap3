@@ -16,6 +16,7 @@ package com.truzzt.extension.logginghouse.client;
 import com.truzzt.extension.logginghouse.client.ids.jsonld.JsonLd;
 import com.truzzt.extension.logginghouse.client.ids.multipart.IdsMultipartSender;
 import de.fraunhofer.iais.eis.LogMessage;
+import de.fraunhofer.iais.eis.RequestMessage;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAccepted;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAgreed;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationFinalized;
@@ -158,8 +159,8 @@ public class LoggingHouseClientExtension implements ServiceExtension {
 
         typeManager.registerSerializer(TYPE_MANAGER_SERIALIZER_KEY, LogMessage.class,
                 new MultiContextJsonLdSerializer<>(LogMessage.class, CONTEXT_MAP));
-        // typeManager.registerSerializer(TYPE_MANAGER_SERIALIZER_KEY, RequestMessage.class,
-        //         new MultiContextJsonLdSerializer<>(RequestMessage.class, CONTEXT_MAP));
+        typeManager.registerSerializer(TYPE_MANAGER_SERIALIZER_KEY, RequestMessage.class,
+                new MultiContextJsonLdSerializer<>(RequestMessage.class, CONTEXT_MAP));
 
         monitor.debug("Registered serializers for LoggingHouseClientExtension");
     }
