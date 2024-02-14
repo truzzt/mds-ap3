@@ -101,7 +101,7 @@ public class IdsClearingHouseServiceImpl implements EventSubscriber {
     }
 
     public void logContractAgreement(ContractAgreement contractAgreement, URL clearingHouseLogUrl) {
-        monitor.info("Logging contract agreement to LoggingHouse");
+        monitor.info("Logging contract agreement to LoggingHouse with contract id: " + contractAgreement.getId());
         var logMessage = new LogMessage(clearingHouseLogUrl, connectorBaseUrl, contractAgreement);
         dispatcherRegistry.dispatch(Object.class, logMessage);
     }

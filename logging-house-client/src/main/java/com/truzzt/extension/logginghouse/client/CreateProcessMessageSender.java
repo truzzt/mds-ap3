@@ -22,9 +22,9 @@ import com.truzzt.extension.logginghouse.client.ids.multipart.MultipartResponse;
 import com.truzzt.extension.logginghouse.client.ids.multipart.MultipartSenderDelegate;
 import com.truzzt.extension.logginghouse.client.ids.multipart.ResponseUtil;
 import de.fraunhofer.iais.eis.DynamicAttributeToken;
-import de.fraunhofer.iais.eis.LogMessageBuilder;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.MessageProcessedNotificationMessageImpl;
+import de.fraunhofer.iais.eis.RequestMessageBuilder;
 import org.json.JSONObject;
 
 import java.util.List;
@@ -36,7 +36,7 @@ public class CreateProcessMessageSender implements MultipartSenderDelegate<Creat
 
     @Override
     public Message buildMessageHeader(CreateProcessMessage createProcessMessage, DynamicAttributeToken token) {
-        return new LogMessageBuilder()
+        return new RequestMessageBuilder()
                 ._modelVersion_(IdsConstants.INFORMATION_MODEL_VERSION)
                 ._issued_(CalendarUtil.gregorianNow())
                 ._securityToken_(token)
