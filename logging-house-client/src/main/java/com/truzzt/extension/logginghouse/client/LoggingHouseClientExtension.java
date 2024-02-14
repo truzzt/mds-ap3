@@ -135,9 +135,10 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         eventRouter.registerSync(ContractNegotiationFinalized.class, eventSubscriber);
         eventRouter.registerSync(ContractNegotiationAgreed.class, eventSubscriber);
         eventRouter.registerSync(ContractNegotiationAccepted.class, eventSubscriber);
-        eventRouter.registerSync(TransferProcessCompleted.class, eventSubscriber);
+        eventRouter.registerSync(TransferProcessRequested.class, eventSubscriber);
         eventRouter.registerSync(TransferProcessInitiated.class, eventSubscriber);
         eventRouter.registerSync(TransferProcessStarted.class, eventSubscriber);
+        eventRouter.registerSync(TransferProcessCompleted.class, eventSubscriber);
         eventRouter.registerSync(TransferProcessFailed.class, eventSubscriber);
         eventRouter.registerSync(TransferProcessTerminated.class, eventSubscriber);
         context.registerService(IdsClearingHouseServiceImpl.class, eventSubscriber);

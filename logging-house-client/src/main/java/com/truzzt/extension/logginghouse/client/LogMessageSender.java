@@ -89,6 +89,8 @@ public class LogMessageSender implements MultipartSenderDelegate<LogMessage, Str
     private String buildTransferProcessPayload(TransferProcess transferProcess) {
         var jo = new JSONObject();
         jo.put("transferProcessId", transferProcess.getId());
+        jo.put("transferState", transferProcess.stateAsString());
+
         var dataRequest = transferProcess.getDataRequest();
         jo.put("contractId", dataRequest.getContractId());
         jo.put("connectorId", dataRequest.getConnectorId());
