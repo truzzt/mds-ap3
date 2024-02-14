@@ -17,7 +17,7 @@ package com.truzzt.extension.logginghouse.client;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationFinalized;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
 import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
-import org.eclipse.edc.connector.transfer.spi.event.TransferProcessTerminated;
+import org.eclipse.edc.connector.transfer.spi.event.TransferProcessEvent;
 import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
 import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
 import org.eclipse.edc.spi.EdcException;
@@ -28,6 +28,9 @@ import org.eclipse.edc.spi.message.RemoteMessageDispatcherRegistry;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.system.Hostname;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -73,7 +76,28 @@ public class IdsClearingHouseServiceImpl implements EventSubscriber {
 
         monitor.info("Creating Process in LoggingHouse");
         var logMessage = new CreateProcessMessage(clearingHouseLogUrl, connectorBaseUrl, contractAgreement.getId(), processOwners);
-        dispatcherRegistry.dispatch(Object.class, logMessage);
+
+        try {
+            dispatcherRegistry.dispatch(Object.class, logMessage);
+        } catch (EdcException e) {
+            if (e.getMessage().startsWith("No provider dispatcher registered for protocol")) {
+                throw e;
+            } else {
+                monitor.severe("Unhandled exception while creating process in LoggingHouse. " + e.getMessage());
+                // Print stack trace
+                String errorStr;
+                try (StringWriter sw = new StringWriter();
+                     PrintWriter pw = new PrintWriter(sw)) {
+
+                    e.printStackTrace(pw);
+                    errorStr = sw.toString();
+
+                } catch (IOException ex) {
+                    throw new RuntimeException("Error while converting the stacktrace");
+                }
+                monitor.severe(errorStr);
+            }
+        }
     }
 
     public void logContractAgreement(ContractAgreement contractAgreement, URL clearingHouseLogUrl) {
@@ -102,8 +126,10 @@ public class IdsClearingHouseServiceImpl implements EventSubscriber {
                 // Log Contract Agreement
                 var extendedLogUrl = new URL(clearingHouseLogUrl + "/messages/log/" + pid);
                 logContractAgreement(contractAgreement, extendedLogUrl);
-            } else if (event.getPayload() instanceof TransferProcessTerminated transferProcessTerminated) {
-                var transferProcess = resolveTransferProcess(transferProcessTerminated);
+            } else if (event.getPayload() instanceof TransferProcessEvent transferProcessEvent) {
+                monitor.debug("Logging transfer event with id " + event.getId());
+
+                var transferProcess = resolveTransferProcess(transferProcessEvent);
                 var pid = transferProcess.getContractId();
                 var extendedUrl = new URL(clearingHouseLogUrl + "/messages/log/" + pid);
                 logTransferProcess(transferProcess, extendedUrl);
@@ -119,8 +145,8 @@ public class IdsClearingHouseServiceImpl implements EventSubscriber {
         return Objects.requireNonNull(contractNegotiation).getContractAgreement();
     }
 
-    private TransferProcess resolveTransferProcess(TransferProcessTerminated transferProcessTerminated) {
-        var transferProcessId = transferProcessTerminated.getTransferProcessId();
+    private TransferProcess resolveTransferProcess(TransferProcessEvent transferProcessEvent) {
+        var transferProcessId = transferProcessEvent.getTransferProcessId();
         return transferProcessStore.findById(transferProcessId);
     }
 
