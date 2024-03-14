@@ -20,12 +20,19 @@ import de.fraunhofer.iais.eis.RequestMessage;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAccepted;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAgreed;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationFinalized;
+import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationTerminated;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
-import org.eclipse.edc.connector.transfer.spi.event.*;
+import org.eclipse.edc.connector.transfer.spi.event.TransferProcessCompleted;
+import org.eclipse.edc.connector.transfer.spi.event.TransferProcessFailed;
+import org.eclipse.edc.connector.transfer.spi.event.TransferProcessInitiated;
+import org.eclipse.edc.connector.transfer.spi.event.TransferProcessRequested;
+import org.eclipse.edc.connector.transfer.spi.event.TransferProcessStarted;
+import org.eclipse.edc.connector.transfer.spi.event.TransferProcessTerminated;
 import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.runtime.metamodel.annotation.Setting;
 import org.eclipse.edc.spi.EdcException;
+import org.eclipse.edc.spi.asset.AssetIndex;
 import org.eclipse.edc.spi.event.EventRouter;
 import org.eclipse.edc.spi.http.EdcHttpClient;
 import org.eclipse.edc.spi.iam.IdentityService;
@@ -62,6 +69,8 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     private ContractNegotiationStore contractNegotiationStore;
     @Inject
     private TransferProcessStore transferProcessStore;
+    @Inject
+    private AssetIndex assetIndex;
 
     private static final Map<String, String> CONTEXT_MAP = Map.of(
             "cat", "http://w3id.org/mds/data-categories#",
@@ -75,7 +84,6 @@ public class LoggingHouseClientExtension implements ServiceExtension {
 
     private URL loggingHouseLogUrl;
     public Monitor monitor;
-
     private boolean enabled;
 
 
@@ -86,18 +94,18 @@ public class LoggingHouseClientExtension implements ServiceExtension {
 
     @Override
     public void initialize(ServiceExtensionContext context) {
-        monitor = context.getMonitor();
-        var extensionEnabled = context.getSetting(LOGGINGHOUSE_CLIENT_EXTENSION_ENABLED, true);
+        this.monitor = context.getMonitor();
 
+        var extensionEnabled = context.getSetting(LOGGINGHOUSE_CLIENT_EXTENSION_ENABLED, true);
         if (!extensionEnabled) {
-            enabled = false;
-            monitor.info("Logginghouse client extension is disabled.");
+            this.enabled = false;
+            this.monitor.info("Logginghouse client extension is disabled.");
             return;
         }
-        enabled = true;
-        monitor.info("Logginghouse client extension is enabled.");
+        this.enabled = true;
+        this.monitor.info("Logginghouse client extension is enabled.");
 
-        loggingHouseLogUrl = readUrlFromSettings(context);
+        this.loggingHouseLogUrl = readUrlFromSettings(context);
 
         registerSerializerClearingHouseMessages(context);
         registerClearingHouseMessageSenders(context);
@@ -135,6 +143,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         eventRouter.registerSync(ContractNegotiationFinalized.class, eventSubscriber);
         eventRouter.registerSync(ContractNegotiationAgreed.class, eventSubscriber);
         eventRouter.registerSync(ContractNegotiationAccepted.class, eventSubscriber);
+        eventRouter.registerSync(ContractNegotiationTerminated.class, eventSubscriber); // TODO: check pid
         eventRouter.registerSync(TransferProcessRequested.class, eventSubscriber);
         eventRouter.registerSync(TransferProcessInitiated.class, eventSubscriber);
         eventRouter.registerSync(TransferProcessStarted.class, eventSubscriber);
@@ -170,10 +179,9 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         monitor.debug("Registering message senders for LoggingHouseClientExtension");
 
         var httpClient = context.getService(EdcHttpClient.class);
-        var monitor = context.getMonitor();
         var objectMapper = typeManager.getMapper(TYPE_MANAGER_SERIALIZER_KEY);
 
-        var logMessageSender = new LogMessageSender();
+        var logMessageSender = new LogMessageSender(monitor, assetIndex, context.getConnectorId());
         var createProcessMessageSender = new CreateProcessMessageSender();
 
         var idsMultipartSender = new IdsMultipartSender(monitor, httpClient, identityService, objectMapper);

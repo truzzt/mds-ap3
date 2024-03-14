@@ -28,13 +28,22 @@ import de.fraunhofer.iais.eis.MessageProcessedNotificationMessageImpl;
 import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
 import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
 import org.eclipse.edc.spi.EdcException;
+import org.eclipse.edc.spi.asset.AssetIndex;
+import org.eclipse.edc.spi.monitor.Monitor;
 import org.json.JSONObject;
 
 import java.util.List;
 
 public class LogMessageSender implements MultipartSenderDelegate<LogMessage, String> {
 
-    public LogMessageSender() {
+    Monitor monitor;
+    String connectorId;
+    AssetIndex assetIndex;
+
+    public LogMessageSender(Monitor monitor, AssetIndex assetIndex, String connectorId) {
+        this.monitor = monitor;
+        this.assetIndex = assetIndex;
+        this.connectorId = connectorId;
     }
 
     @Override
@@ -76,24 +85,51 @@ public class LogMessageSender implements MultipartSenderDelegate<LogMessage, Str
     }
 
     private String buildContractAgreementPayload(ContractAgreement contractAgreement) {
+        assert contractAgreement != null;
+
         var jo = new JSONObject();
-        jo.put("AgreementId", contractAgreement.getId());
-        jo.put("ProviderId", contractAgreement.getProviderId());
-        jo.put("ConsumerId", contractAgreement.getConsumerId());
+
+        jo.put("Timestamp", CalendarUtil.gregorianNow().toString());
+        jo.put("ConnectorId", connectorId);
+
+        // Check if connector is the provider
+        if (contractAgreement.getProviderId().equals(connectorId)) {
+            // In case of the provider, log asset information
+            var asset = assetIndex.findById(contractAgreement.getAssetId());
+
+            if (asset == null) {
+                monitor.warning("Asset with id " + contractAgreement.getAssetId() + " not found in asset index.");
+            } else {
+                jo.put("AssetId", asset.getId());
+                jo.put("AssetName", asset.getName());
+                jo.put("AssetDescription", asset.getDescription());
+                jo.put("AssetVersion", asset.getVersion());
+                jo.put("AssetContentType", asset.getContentType());
+                jo.put("AssetProperties", asset.getProperties());
+            }
+        }
+
+        jo.put("ContractAgreementId", contractAgreement.getId());
+        jo.put("ContractProviderId", contractAgreement.getProviderId());
+        jo.put("ContractConsumerId", contractAgreement.getConsumerId());
         jo.put("ContractSigningDate", contractAgreement.getContractSigningDate());
-        jo.put("Policy", contractAgreement.getPolicy());
-        jo.put("AssetId", contractAgreement.getAssetId());
+        jo.put("ContractPolicy", contractAgreement.getPolicy());
         return jo.toString();
     }
 
     private String buildTransferProcessPayload(TransferProcess transferProcess) {
         var jo = new JSONObject();
-        jo.put("transferProcessId", transferProcess.getId());
-        jo.put("transferState", transferProcess.stateAsString());
 
-        var dataRequest = transferProcess.getDataRequest();
-        jo.put("contractId", dataRequest.getContractId());
-        jo.put("connectorId", dataRequest.getConnectorId());
+        jo.put("Timestamp", CalendarUtil.gregorianNow().toString());
+        jo.put("ConnectorId", connectorId);
+
+        jo.put("TransferProcessId", transferProcess.getId());
+        jo.put("TransferState", transferProcess.stateAsString());
+        jo.put("TransferProtocol", transferProcess.getProtocol());
+        jo.put("TransferContractId", transferProcess.getContractId());
+        jo.put("TransferConnectorId", transferProcess.getConnectorId());
+        jo.put("TransferAssetId", transferProcess.getAssetId());
+
         return jo.toString();
     }
 }

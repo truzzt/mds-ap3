@@ -86,12 +86,9 @@ public class IdsClearingHouseServiceImpl implements EventSubscriber {
                 monitor.severe("Unhandled exception while creating process in LoggingHouse. " + e.getMessage());
                 // Print stack trace
                 String errorStr;
-                try (StringWriter sw = new StringWriter();
-                     PrintWriter pw = new PrintWriter(sw)) {
-
+                try (StringWriter sw = new StringWriter(); PrintWriter pw = new PrintWriter(sw)) {
                     e.printStackTrace(pw);
                     errorStr = sw.toString();
-
                 } catch (IOException ex) {
                     throw new RuntimeException("Error while converting the stacktrace");
                 }
