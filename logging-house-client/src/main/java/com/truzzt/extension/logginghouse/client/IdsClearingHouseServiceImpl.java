@@ -31,6 +31,7 @@ import org.eclipse.edc.spi.system.Hostname;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -98,13 +99,13 @@ public class IdsClearingHouseServiceImpl implements EventSubscriber {
     }
 
     public void logContractAgreement(ContractAgreement contractAgreement, URL clearingHouseLogUrl) {
-        monitor.info("Logging contract agreement to LoggingHouse with contract id: " + contractAgreement.getId());
+        monitor.info("Logging ContractAgreement to LoggingHouse with contract id: " + contractAgreement.getId());
         var logMessage = new LogMessage(clearingHouseLogUrl, connectorBaseUrl, contractAgreement);
         dispatcherRegistry.dispatch(Object.class, logMessage);
     }
 
     public void logTransferProcess(TransferProcess transferProcess, URL clearingHouseLogUrl) {
-        monitor.info("Logging transferprocess to LoggingHouse");
+        monitor.info("Logging TransferProcess to LoggingHouse");
         var logMessage = new LogMessage(clearingHouseLogUrl, connectorBaseUrl, transferProcess);
         dispatcherRegistry.dispatch(Object.class, logMessage);
     }
@@ -118,20 +119,32 @@ public class IdsClearingHouseServiceImpl implements EventSubscriber {
 
                 // Create Process
                 var extendedProcessUrl = new URL(clearingHouseLogUrl + "/process/" + pid);
-                createProcess(contractAgreement, extendedProcessUrl);
+                try {
+                    createProcess(contractAgreement, extendedProcessUrl);
+                } catch (Exception e) {
+                    monitor.warning("Could not create process in LoggingHouse: " + e.getMessage());
+                }
 
                 // Log Contract Agreement
                 var extendedLogUrl = new URL(clearingHouseLogUrl + "/messages/log/" + pid);
-                logContractAgreement(contractAgreement, extendedLogUrl);
+                try {
+                    logContractAgreement(contractAgreement, extendedLogUrl);
+                } catch (Exception e) {
+                    monitor.warning("Could not log ContractNegotiation to LoggingHouse: " + e.getMessage());
+                }
             } else if (event.getPayload() instanceof TransferProcessEvent transferProcessEvent) {
                 monitor.debug("Logging transfer event with id " + event.getId());
 
                 var transferProcess = resolveTransferProcess(transferProcessEvent);
                 var pid = transferProcess.getContractId();
                 var extendedUrl = new URL(clearingHouseLogUrl + "/messages/log/" + pid);
-                logTransferProcess(transferProcess, extendedUrl);
+                try {
+                    logTransferProcess(transferProcess, extendedUrl);
+                } catch (Exception e) {
+                    monitor.warning("Could not log TransferProcess to LoggingHouse: " + e.getMessage());
+                }
             }
-        } catch (Exception e) {
+        } catch (MalformedURLException e) {
             throw new EdcException("Could not create extended clearinghouse url.");
         }
     }
