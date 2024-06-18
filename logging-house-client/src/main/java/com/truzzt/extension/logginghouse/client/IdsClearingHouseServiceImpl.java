@@ -14,6 +14,8 @@
 
 package com.truzzt.extension.logginghouse.client;
 
+import com.truzzt.extension.logginghouse.client.messages.CreateProcessMessage;
+import com.truzzt.extension.logginghouse.client.messages.LogMessage;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationFinalized;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
 import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;

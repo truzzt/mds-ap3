@@ -12,7 +12,7 @@
  *
  */
 
-package com.truzzt.extension.logginghouse.client;
+package com.truzzt.extension.logginghouse.client.multipart;
 
 import com.truzzt.extension.logginghouse.client.ids.multipart.IdsMultipartRemoteMessageDispatcher;
 import com.truzzt.extension.logginghouse.client.ids.multipart.IdsMultipartSender;

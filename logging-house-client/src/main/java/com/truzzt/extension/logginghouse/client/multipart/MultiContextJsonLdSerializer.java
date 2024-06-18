@@ -13,7 +13,7 @@
  *
  */
 
-package com.truzzt.extension.logginghouse.client;
+package com.truzzt.extension.logginghouse.client.multipart;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonGenerator;

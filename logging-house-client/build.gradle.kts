@@ -14,6 +14,8 @@ val jsonVersion: String by project
 dependencies {
     implementation("${edcGroup}:control-plane-core:${edcVersion}")
     implementation("${edcGroup}:http-spi:${edcVersion}")
+    implementation("${edcGroup}:sql-core:${edcVersion}")
+    implementation("${edcGroup}:transaction-datasource-spi:${edcVersion}")
 
     implementation("com.squareup.okhttp3:okhttp:${okHttpVersion}")
     implementation("org.json:json:${jsonVersion}")
@@ -21,6 +23,9 @@ dependencies {
 
     implementation("de.fraunhofer.iais.eis.ids.infomodel:infomodel-java:1.0.2-basecamp")
     implementation("de.fraunhofer.iais.eis.ids.infomodel:infomodel-util:1.0.2-basecamp")
+
+    implementation("org.postgresql:postgresql:42.4.5")
+    implementation("org.flywaydb:flyway-core:9.0.1")
 
     testImplementation("org.assertj:assertj-core:${assertj}")
     testImplementation("org.junit.jupiter:junit-jupiter-api:${jupiterVersion}")

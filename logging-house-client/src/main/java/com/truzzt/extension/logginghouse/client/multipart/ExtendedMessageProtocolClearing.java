@@ -13,7 +13,7 @@
  *
  */
 
-package com.truzzt.extension.logginghouse.client;
+package com.truzzt.extension.logginghouse.client.multipart;
 
 public final class ExtendedMessageProtocolClearing {
 

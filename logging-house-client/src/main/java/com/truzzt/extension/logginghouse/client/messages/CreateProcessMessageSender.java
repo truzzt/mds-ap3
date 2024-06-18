@@ -12,7 +12,7 @@
  *
  */
 
-package com.truzzt.extension.logginghouse.client;
+package com.truzzt.extension.logginghouse.client.messages;
 
 import com.truzzt.extension.logginghouse.client.ids.jsonld.JsonLd;
 import com.truzzt.extension.logginghouse.client.ids.multipart.CalendarUtil;

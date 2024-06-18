@@ -13,8 +13,14 @@
 
 package com.truzzt.extension.logginghouse.client;
 
+import com.truzzt.extension.logginghouse.client.flyway.FlywayService;
+import com.truzzt.extension.logginghouse.client.flyway.migration.DatabaseMigrationManager;
 import com.truzzt.extension.logginghouse.client.ids.jsonld.JsonLd;
 import com.truzzt.extension.logginghouse.client.ids.multipart.IdsMultipartSender;
+import com.truzzt.extension.logginghouse.client.messages.CreateProcessMessageSender;
+import com.truzzt.extension.logginghouse.client.messages.LogMessageSender;
+import com.truzzt.extension.logginghouse.client.multipart.IdsMultipartClearingRemoteMessageDispatcher;
+import com.truzzt.extension.logginghouse.client.multipart.MultiContextJsonLdSerializer;
 import de.fraunhofer.iais.eis.LogMessage;
 import de.fraunhofer.iais.eis.RequestMessage;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAccepted;
@@ -82,6 +88,15 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     @Setting
     public static final String LOGGINGHOUSE_CLIENT_EXTENSION_ENABLED = "edc.logginghouse.extension.enabled";
 
+    @Setting
+    private static final String EDC_DATASOURCE_REPAIR_SETTING = "edc.flyway.repair";
+
+    @Setting
+    private static final String FLYWAY_CLEAN_ENABLED = "edc.flyway.clean.enable";
+
+    @Setting
+    private static final String FLYWAY_CLEAN = "edc.flyway.clean";
+
     private URL loggingHouseLogUrl;
     public Monitor monitor;
     private boolean enabled;
@@ -107,6 +122,8 @@ public class LoggingHouseClientExtension implements ServiceExtension {
 
         this.loggingHouseLogUrl = readUrlFromSettings(context);
 
+        runFlywayMigrations(context);
+
         registerSerializerClearingHouseMessages(context);
         registerClearingHouseMessageSenders(context);
 
@@ -127,6 +144,17 @@ public class LoggingHouseClientExtension implements ServiceExtension {
             throw new EdcException(String.format("Could not parse setting %s to Url",
                     LoggingHouseClientExtension.LOGGINGHOUSE_LOG_URL_SETTING), e);
         }
+    }
+
+    public void runFlywayMigrations(ServiceExtensionContext context) {
+        var flywayService = new FlywayService(
+                context.getMonitor(),
+                context.getSetting(EDC_DATASOURCE_REPAIR_SETTING, false),
+                context.getSetting(FLYWAY_CLEAN_ENABLED, false),
+                context.getSetting(FLYWAY_CLEAN, false)
+        );
+        var migrationManager = new DatabaseMigrationManager(context.getConfig(), context.getMonitor(), flywayService);
+        migrationManager.migrate();
     }
 
     private void registerEventSubscriber(ServiceExtensionContext context) {
@@ -191,7 +219,6 @@ public class LoggingHouseClientExtension implements ServiceExtension {
 
         dispatcherRegistry.register(dispatcher);
     }
-
 
     @Override
     public void start() {
