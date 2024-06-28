@@ -8,6 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
+ *       truzzt GmbH - Initial implementation
  *
  */
 
@@ -21,6 +22,8 @@ import com.truzzt.extension.logginghouse.client.messages.CreateProcessMessageSen
 import com.truzzt.extension.logginghouse.client.messages.LogMessageSender;
 import com.truzzt.extension.logginghouse.client.multipart.IdsMultipartClearingRemoteMessageDispatcher;
 import com.truzzt.extension.logginghouse.client.multipart.MultiContextJsonLdSerializer;
+import com.truzzt.extension.logginghouse.client.store.sql.SqlLoggingHouseMessageStore;
+import com.truzzt.extension.logginghouse.client.store.sql.schema.postgres.PostgresDialectStatements;
 import de.fraunhofer.iais.eis.LogMessage;
 import de.fraunhofer.iais.eis.RequestMessage;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAccepted;
@@ -48,13 +51,15 @@ import org.eclipse.edc.spi.system.Hostname;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 import org.eclipse.edc.spi.types.TypeManager;
+import org.eclipse.edc.sql.QueryExecutor;
+import org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry;
+import org.eclipse.edc.transaction.spi.TransactionContext;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
 public class LoggingHouseClientExtension implements ServiceExtension {
-
 
     public static final String LOGGINGHOUSE_CLIENT_EXTENSION = "LoggingHouseClientExtension";
     private static final String TYPE_MANAGER_SERIALIZER_KEY = "ids-clearinghouse";
@@ -70,6 +75,13 @@ public class LoggingHouseClientExtension implements ServiceExtension {
 
     @Inject
     private Hostname hostname;
+
+    @Inject
+    private DataSourceRegistry dataSourceRegistry;
+    @Inject
+    private TransactionContext transactionContext;
+    @Inject
+    private QueryExecutor queryExecutor;
 
     @Inject
     private ContractNegotiationStore contractNegotiationStore;
@@ -101,7 +113,6 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     public Monitor monitor;
     private boolean enabled;
 
-
     @Override
     public String name() {
         return LOGGINGHOUSE_CLIENT_EXTENSION;
@@ -127,7 +138,9 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         registerSerializerClearingHouseMessages(context);
         registerClearingHouseMessageSenders(context);
 
-        registerEventSubscriber(context);
+        var loggingHouseMessageStore = initializeLoggingHouseMessageStore(typeManager);
+
+        registerEventSubscriber(context, loggingHouseMessageStore);
     }
 
     private URL readUrlFromSettings(ServiceExtensionContext context) {
@@ -146,7 +159,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         }
     }
 
-    public void runFlywayMigrations(ServiceExtensionContext context) {
+    private void runFlywayMigrations(ServiceExtensionContext context) {
         var flywayService = new FlywayService(
                 context.getMonitor(),
                 context.getSetting(EDC_DATASOURCE_REPAIR_SETTING, false),
@@ -157,13 +170,22 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         migrationManager.migrate();
     }
 
-    private void registerEventSubscriber(ServiceExtensionContext context) {
+    private SqlLoggingHouseMessageStore initializeLoggingHouseMessageStore(TypeManager typeManager) {
+        return new SqlLoggingHouseMessageStore(
+                dataSourceRegistry,
+                DataSourceRegistry.DEFAULT_DATASOURCE,
+                transactionContext,
+                typeManager.getMapper(),
+                new PostgresDialectStatements(),
+                queryExecutor
+        );
+    }
+
+    private void registerEventSubscriber(ServiceExtensionContext context, SqlLoggingHouseMessageStore loggingHouseMessageStore) {
         monitor.debug("Registering event subscriber for LoggingHouseClientExtension");
 
-        var eventSubscriber = new IdsClearingHouseServiceImpl(
-                dispatcherRegistry,
-                hostname,
-                loggingHouseLogUrl,
+        var eventSubscriber = new LoggingHouseEventSubscriber(
+                loggingHouseMessageStore,
                 contractNegotiationStore,
                 transferProcessStore,
                 monitor);
@@ -178,7 +200,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         eventRouter.registerSync(TransferProcessCompleted.class, eventSubscriber);
         eventRouter.registerSync(TransferProcessFailed.class, eventSubscriber);
         eventRouter.registerSync(TransferProcessTerminated.class, eventSubscriber);
-        context.registerService(IdsClearingHouseServiceImpl.class, eventSubscriber);
+        context.registerService(LoggingHouseEventSubscriber.class, eventSubscriber);
 
         monitor.debug("Registered event subscriber for LoggingHouseClientExtension");
     }
