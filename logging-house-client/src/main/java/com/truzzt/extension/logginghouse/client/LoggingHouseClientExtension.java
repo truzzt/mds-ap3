@@ -22,8 +22,10 @@ import com.truzzt.extension.logginghouse.client.messages.CreateProcessMessageSen
 import com.truzzt.extension.logginghouse.client.messages.LogMessageSender;
 import com.truzzt.extension.logginghouse.client.multipart.IdsMultipartClearingRemoteMessageDispatcher;
 import com.truzzt.extension.logginghouse.client.multipart.MultiContextJsonLdSerializer;
+import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.store.sql.SqlLoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.store.sql.schema.postgres.PostgresDialectStatements;
+import com.truzzt.extension.logginghouse.client.worker.WorkersManager;
 import de.fraunhofer.iais.eis.LogMessage;
 import de.fraunhofer.iais.eis.RequestMessage;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAccepted;
@@ -31,15 +33,15 @@ import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.Contract
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationFinalized;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationTerminated;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
-import org.eclipse.edc.connector.transfer.spi.event.TransferProcessCompleted;
 import org.eclipse.edc.connector.transfer.spi.event.TransferProcessFailed;
 import org.eclipse.edc.connector.transfer.spi.event.TransferProcessInitiated;
 import org.eclipse.edc.connector.transfer.spi.event.TransferProcessRequested;
-import org.eclipse.edc.connector.transfer.spi.event.TransferProcessStarted;
 import org.eclipse.edc.connector.transfer.spi.event.TransferProcessTerminated;
 import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
+import org.eclipse.edc.connector.transfer.spi.event.TransferProcessStarted;
+import org.eclipse.edc.connector.transfer.spi.event.TransferProcessCompleted;
+
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
-import org.eclipse.edc.runtime.metamodel.annotation.Setting;
 import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.asset.AssetIndex;
 import org.eclipse.edc.spi.event.EventRouter;
@@ -58,6 +60,12 @@ import org.eclipse.edc.transaction.spi.TransactionContext;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
+
+import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_ENABLED;
+import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_SERVER_URL_SETTING;
+import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_FLYWAY_REPAIR_SETTING;
+import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_FLYWAY_CLEAN_SETTING;
+import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_EXTENSION_MAX_WORKERS;
 
 public class LoggingHouseClientExtension implements ServiceExtension {
 
@@ -94,21 +102,12 @@ public class LoggingHouseClientExtension implements ServiceExtension {
             "cat", "http://w3id.org/mds/data-categories#",
             "ids", "https://w3id.org/idsa/core/",
             "idsc", "https://w3id.org/idsa/code/");
-    @Setting
-    public static final String LOGGINGHOUSE_LOG_URL_SETTING = "edc.logginghouse.extension.url";
 
-    @Setting
-    public static final String LOGGINGHOUSE_CLIENT_EXTENSION_ENABLED = "edc.logginghouse.extension.enabled";
-
-    @Setting
-    private static final String EDC_DATASOURCE_REPAIR_SETTING = "edc.flyway.repair";
-
-    @Setting
-    private static final String FLYWAY_CLEAN = "edc.flyway.clean";
-
-    private URL loggingHouseLogUrl;
     public Monitor monitor;
     private boolean enabled;
+    private URL loggingHouseLogUrl;
+
+    private WorkersManager workersManager;
 
     @Override
     public String name() {
@@ -117,50 +116,50 @@ public class LoggingHouseClientExtension implements ServiceExtension {
 
     @Override
     public void initialize(ServiceExtensionContext context) {
-        this.monitor = context.getMonitor();
+        monitor = context.getMonitor();
 
-        var extensionEnabled = context.getSetting(LOGGINGHOUSE_CLIENT_EXTENSION_ENABLED, true);
+        var extensionEnabled = context.getSetting(LOGGINGHOUSE_ENABLED, true);
         if (!extensionEnabled) {
-            this.enabled = false;
-            this.monitor.info("Logginghouse client extension is disabled.");
+            enabled = false;
+            monitor.info("Logginghouse client extension is disabled.");
             return;
         }
-        this.enabled = true;
-        this.monitor.info("Logginghouse client extension is enabled.");
+        enabled = true;
+        monitor.info("Logginghouse client extension is enabled.");
 
-        this.loggingHouseLogUrl = readUrlFromSettings(context);
+        loggingHouseLogUrl = readUrlFromSettings(context);
 
         runFlywayMigrations(context);
 
         registerSerializerClearingHouseMessages(context);
-        registerClearingHouseMessageSenders(context);
 
-        var loggingHouseMessageStore = initializeLoggingHouseMessageStore(typeManager);
+        var store = initializeLoggingHouseMessageStore(typeManager);
+        registerEventSubscriber(context, store);
 
-        registerEventSubscriber(context, loggingHouseMessageStore);
+        registerDispatcher(context);
+        workersManager = initializeWorkersManager(context, store);
     }
 
     private URL readUrlFromSettings(ServiceExtensionContext context) {
         try {
-            var urlString = context.getSetting(LoggingHouseClientExtension.LOGGINGHOUSE_LOG_URL_SETTING, null);
+            var urlString = context.getSetting(LOGGINGHOUSE_SERVER_URL_SETTING, null);
             if (urlString == null) {
-                throw new EdcException(String.format("Could not initialize " +
-                        "LoggingHouseClientExtension: " +
-                        "No url specified using setting %s", LoggingHouseClientExtension.LOGGINGHOUSE_LOG_URL_SETTING));
+                throw new EdcException(String.format("Could not initialize LoggingHouseClientExtension: " +
+                        "No url specified using setting %s", LOGGINGHOUSE_SERVER_URL_SETTING));
             }
 
             return new URL(urlString);
         } catch (MalformedURLException e) {
             throw new EdcException(String.format("Could not parse setting %s to Url",
-                    LoggingHouseClientExtension.LOGGINGHOUSE_LOG_URL_SETTING), e);
+                    LOGGINGHOUSE_SERVER_URL_SETTING), e);
         }
     }
 
     private void runFlywayMigrations(ServiceExtensionContext context) {
         var flywayService = new FlywayService(
                 context.getMonitor(),
-                context.getSetting(EDC_DATASOURCE_REPAIR_SETTING, false),
-                context.getSetting(FLYWAY_CLEAN, false)
+                context.getSetting(LOGGINGHOUSE_FLYWAY_REPAIR_SETTING, false),
+                context.getSetting(LOGGINGHOUSE_FLYWAY_CLEAN_SETTING, false)
         );
         var migrationManager = new DatabaseMigrationManager(context.getConfig(), context.getMonitor(), flywayService);
         migrationManager.migrate();
@@ -177,7 +176,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         );
     }
 
-    private void registerEventSubscriber(ServiceExtensionContext context, SqlLoggingHouseMessageStore loggingHouseMessageStore) {
+    private void registerEventSubscriber(ServiceExtensionContext context, LoggingHouseMessageStore loggingHouseMessageStore) {
         monitor.debug("Registering event subscriber for LoggingHouseClientExtension");
 
         var eventSubscriber = new LoggingHouseEventSubscriber(
@@ -221,8 +220,18 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         monitor.debug("Registered serializers for LoggingHouseClientExtension");
     }
 
-    private void registerClearingHouseMessageSenders(ServiceExtensionContext context) {
-        monitor.debug("Registering message senders for LoggingHouseClientExtension");
+    private WorkersManager initializeWorkersManager(ServiceExtensionContext context, LoggingHouseMessageStore store) {
+        return new WorkersManager(this.monitor,
+                context.getSetting(LOGGINGHOUSE_EXTENSION_MAX_WORKERS, 1),
+                store,
+                dispatcherRegistry,
+                hostname,
+                loggingHouseLogUrl
+        );
+    }
+
+    private void registerDispatcher(ServiceExtensionContext context) {
+        monitor.debug("Registering IDS dispatch sender for LoggingHouseClientExtension");
 
         var httpClient = context.getService(EdcHttpClient.class);
         var objectMapper = typeManager.getMapper(TYPE_MANAGER_SERIALIZER_KEY);

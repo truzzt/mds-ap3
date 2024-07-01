@@ -16,7 +16,11 @@ package com.truzzt.extension.logginghouse.client.spi.store;
 
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessage;
 
+import java.util.List;
+
 public interface LoggingHouseMessageStore {
 
     void save(LoggingHouseMessage message);
+
+    List<LoggingHouseMessage> listNotSent();
 }

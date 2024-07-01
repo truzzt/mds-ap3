@@ -26,6 +26,8 @@ import org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry;
 import org.eclipse.edc.transaction.spi.TransactionContext;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class SqlLoggingHouseMessageStore extends AbstractSqlStore implements LoggingHouseMessageStore {
@@ -60,6 +62,11 @@ public class SqlLoggingHouseMessageStore extends AbstractSqlStore implements Log
                 throw new EdcPersistenceException(e.getMessage(), e);
             }
         });
+    }
+
+    @Override
+    public List<LoggingHouseMessage> listNotSent() {
+        return new ArrayList<LoggingHouseMessage>();
     }
 
     private Long mapFromZonedDateTime(ZonedDateTime zonedDateTime) {
