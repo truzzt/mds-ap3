@@ -104,9 +104,6 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     private static final String EDC_DATASOURCE_REPAIR_SETTING = "edc.flyway.repair";
 
     @Setting
-    private static final String FLYWAY_CLEAN_ENABLED = "edc.flyway.clean.enable";
-
-    @Setting
     private static final String FLYWAY_CLEAN = "edc.flyway.clean";
 
     private URL loggingHouseLogUrl;
@@ -163,7 +160,6 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         var flywayService = new FlywayService(
                 context.getMonitor(),
                 context.getSetting(EDC_DATASOURCE_REPAIR_SETTING, false),
-                context.getSetting(FLYWAY_CLEAN_ENABLED, false),
                 context.getSetting(FLYWAY_CLEAN, false)
         );
         var migrationManager = new DatabaseMigrationManager(context.getConfig(), context.getMonitor(), flywayService);

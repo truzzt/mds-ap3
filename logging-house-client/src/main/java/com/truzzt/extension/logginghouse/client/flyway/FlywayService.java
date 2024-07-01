@@ -35,13 +35,11 @@ public class FlywayService {
 
     private final Monitor monitor;
     private final boolean tryRepairOnFailedMigration;
-    private final boolean cleanEnabled;
     private final boolean clean;
 
-    public FlywayService(Monitor monitor, boolean tryRepairOnFailedMigration, boolean cleanEnabled, boolean clean) {
+    public FlywayService(Monitor monitor, boolean tryRepairOnFailedMigration, boolean clean) {
         this.monitor = monitor;
         this.tryRepairOnFailedMigration = tryRepairOnFailedMigration;
-        this.cleanEnabled = cleanEnabled;
         this.clean = clean;
     }
 
@@ -104,7 +102,7 @@ public class FlywayService {
                 .dataSource(dataSource)
                 .table(MIGRATION_TABLE_NAME)
                 .locations(migrationLocations.toArray(new String[0]))
-                .cleanDisabled(!cleanEnabled)
+                .cleanDisabled(!clean)
                 .load();
     }
 
