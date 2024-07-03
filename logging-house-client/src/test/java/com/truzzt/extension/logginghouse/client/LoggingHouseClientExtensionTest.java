@@ -36,6 +36,6 @@ class LoggingHouseClientExtensionTest {
 
     @Test
     void name_shouldReturnCorrectName() {
-        assertEquals(LoggingHouseClientExtension.LOGGINGHOUSE_CLIENT_EXTENSION, extension.name());
+        assertEquals(LoggingHouseClientExtension.NAME, extension.name());
     }
 }
