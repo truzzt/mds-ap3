@@ -32,7 +32,7 @@ public class DatabaseMigrationManager {
 
     public void migrate() {
         var datasourceProperties = new DatasourceProperties(config);
-        monitor.info("Using datasource %s to apply flyway migrations".formatted(datasourceProperties.getName()));
+        monitor.info("Using datasource %s to apply flyway migrations".formatted(DatasourceProperties.LOGGING_HOUSE_DATASOURCE));
 
         flywayService.cleanDatabase(datasourceProperties);
         flywayService.migrateDatabase(datasourceProperties);

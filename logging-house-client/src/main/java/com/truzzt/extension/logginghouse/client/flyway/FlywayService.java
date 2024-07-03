@@ -30,7 +30,7 @@ import javax.sql.DataSource;
 
 public class FlywayService {
 
-    private static final String MIGRATION_LOCATION_BASE = "classpath:migration";
+    private static final String MIGRATION_LOCATION_BASE = "classpath:migration/logginghouse";
     private static final String MIGRATION_TABLE_NAME = "flyway_schema_history_logginghouse";
 
     private final Monitor monitor;

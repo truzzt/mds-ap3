@@ -63,13 +63,13 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.Map;
 
-import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_ENABLED;
+import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_ENABLED_SETTING;
 import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_EXTENSION_MAX_WORKERS;
 import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_EXTENSION_WORKERS_DELAY;
 import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_EXTENSION_WORKERS_PERIOD;
 import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_FLYWAY_CLEAN_SETTING;
 import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_FLYWAY_REPAIR_SETTING;
-import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_SERVER_URL_SETTING;
+import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_URL_SETTING;
 
 @Extension(value = LoggingHouseClientExtension.NAME)
 @Requires(value = {
@@ -137,7 +137,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     public void initialize(ServiceExtensionContext context) {
         monitor = context.getMonitor();
 
-        var extensionEnabled = context.getSetting(LOGGINGHOUSE_ENABLED, true);
+        var extensionEnabled = context.getSetting(LOGGINGHOUSE_ENABLED_SETTING, true);
         if (!extensionEnabled) {
             enabled = false;
             monitor.info("Logginghouse client extension is disabled.");
@@ -161,16 +161,16 @@ public class LoggingHouseClientExtension implements ServiceExtension {
 
     private URL readUrlFromSettings(ServiceExtensionContext context) {
         try {
-            var urlString = context.getSetting(LOGGINGHOUSE_SERVER_URL_SETTING, null);
+            var urlString = context.getSetting(LOGGINGHOUSE_URL_SETTING, null);
             if (urlString == null) {
                 throw new EdcException(String.format("Could not initialize LoggingHouseClientExtension: " +
-                        "No url specified using setting %s", LOGGINGHOUSE_SERVER_URL_SETTING));
+                        "No url specified using setting %s", LOGGINGHOUSE_URL_SETTING));
             }
 
             return new URL(urlString);
         } catch (MalformedURLException e) {
             throw new EdcException(String.format("Could not parse setting %s to Url",
-                    LOGGINGHOUSE_SERVER_URL_SETTING), e);
+                    LOGGINGHOUSE_URL_SETTING), e);
         }
     }
 
