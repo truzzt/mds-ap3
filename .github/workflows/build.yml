@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: read 
+      packages: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v3
@@ -20,4 +20,7 @@ jobs:
       - name: Build package
         uses: gradle/gradle-build-action@749f47bda3e44aa060e82d7b3ef7e40d953bd629
         with:
-          arguments: build 
+          arguments: build
+        env:
+          USERNAME: ${{ github.actor }}
+          TOKEN: ${{ github.token }}
