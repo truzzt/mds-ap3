@@ -62,7 +62,6 @@ subprojects {
             maven {
                 name = "GitHubPackages"
                 url = uri("https://maven.pkg.github.com/truzzt/mds-ap3")
-                version = "0.3.2"
                 credentials {
                     username = System.getenv("USERNAME")
                     password = System.getenv("TOKEN")
