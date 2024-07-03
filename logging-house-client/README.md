@@ -1,1 +1,3 @@
 # Logging House Client
+
+## Notes
