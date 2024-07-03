@@ -116,7 +116,7 @@ public class MessageWorker {
         monitor.info("Logging message to LoggingHouse with type " + message.getEventType() + " and id " + message.getEventId());
         var logMessage = new LogMessage(clearingHouseLogUrl, connectorBaseUrl, message.getEventToLog());
 
-         return dispatcherRegistry.dispatch(Object.class, logMessage);
+        return dispatcherRegistry.dispatch(Object.class, logMessage);
     }
 
 }

@@ -15,15 +15,15 @@
 package com.truzzt.extension.logginghouse.client;
 
 import com.truzzt.extension.logginghouse.client.events.LoggingHouseEventSubscriber;
+import com.truzzt.extension.logginghouse.client.events.messages.CreateProcessMessageSender;
+import com.truzzt.extension.logginghouse.client.events.messages.LogMessageSender;
 import com.truzzt.extension.logginghouse.client.flyway.FlywayService;
 import com.truzzt.extension.logginghouse.client.flyway.connection.DatasourceProperties;
 import com.truzzt.extension.logginghouse.client.flyway.migration.DatabaseMigrationManager;
-import com.truzzt.extension.logginghouse.client.multipart.ids.jsonld.JsonLd;
-import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.IdsMultipartSender;
-import com.truzzt.extension.logginghouse.client.events.messages.CreateProcessMessageSender;
-import com.truzzt.extension.logginghouse.client.events.messages.LogMessageSender;
 import com.truzzt.extension.logginghouse.client.multipart.IdsMultipartClearingRemoteMessageDispatcher;
 import com.truzzt.extension.logginghouse.client.multipart.MultiContextJsonLdSerializer;
+import com.truzzt.extension.logginghouse.client.multipart.ids.jsonld.JsonLd;
+import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.IdsMultipartSender;
 import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.store.sql.SqlLoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.store.sql.schema.postgres.PostgresDialectStatements;
@@ -33,14 +33,8 @@ import de.fraunhofer.iais.eis.LogMessage;
 import de.fraunhofer.iais.eis.RequestMessage;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationFinalized;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
-import org.eclipse.edc.connector.transfer.spi.event.TransferProcessFailed;
-import org.eclipse.edc.connector.transfer.spi.event.TransferProcessInitiated;
-import org.eclipse.edc.connector.transfer.spi.event.TransferProcessRequested;
-import org.eclipse.edc.connector.transfer.spi.event.TransferProcessTerminated;
+import org.eclipse.edc.connector.transfer.spi.event.*;
 import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
-import org.eclipse.edc.connector.transfer.spi.event.TransferProcessStarted;
-import org.eclipse.edc.connector.transfer.spi.event.TransferProcessCompleted;
-
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.runtime.metamodel.annotation.Requires;
