@@ -14,7 +14,7 @@
  *
  */
 
-package com.truzzt.extension.logginghouse.client.ids.multipart;
+package com.truzzt.extension.logginghouse.client.multipart.ids.multipart;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.fraunhofer.iais.eis.DynamicAttributeToken;
@@ -219,7 +219,7 @@ public class IdsMultipartSender {
     public void checkResponseType(MultipartResponse<?> response, MultipartSenderDelegate<? extends RemoteMessage, ?> senderDelegate) {
         var type = senderDelegate.getAllowedResponseTypes();
         if (!type.contains(response.header().getClass())) {
-            throw new EdcException(String.format("Received %s but expected %s.", response.header().getClass(), type));
+            throw new EdcException(format("Received %s but expected %s.", response.header().getClass(), type));
         }
     }
 

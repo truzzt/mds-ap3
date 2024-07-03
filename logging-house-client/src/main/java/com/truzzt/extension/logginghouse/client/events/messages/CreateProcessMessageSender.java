@@ -12,15 +12,15 @@
  *
  */
 
-package com.truzzt.extension.logginghouse.client.messages;
+package com.truzzt.extension.logginghouse.client.events.messages;
 
-import com.truzzt.extension.logginghouse.client.ids.jsonld.JsonLd;
-import com.truzzt.extension.logginghouse.client.ids.multipart.CalendarUtil;
-import com.truzzt.extension.logginghouse.client.ids.multipart.IdsConstants;
-import com.truzzt.extension.logginghouse.client.ids.multipart.IdsMultipartParts;
-import com.truzzt.extension.logginghouse.client.ids.multipart.MultipartResponse;
-import com.truzzt.extension.logginghouse.client.ids.multipart.MultipartSenderDelegate;
-import com.truzzt.extension.logginghouse.client.ids.multipart.ResponseUtil;
+import com.truzzt.extension.logginghouse.client.multipart.ids.jsonld.JsonLd;
+import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.CalendarUtil;
+import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.IdsConstants;
+import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.IdsMultipartParts;
+import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.MultipartResponse;
+import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.MultipartSenderDelegate;
+import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.ResponseUtil;
 import de.fraunhofer.iais.eis.DynamicAttributeToken;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.MessageProcessedNotificationMessageImpl;

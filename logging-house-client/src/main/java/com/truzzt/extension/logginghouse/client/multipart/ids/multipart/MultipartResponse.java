@@ -12,7 +12,7 @@
  *
  */
 
-package com.truzzt.extension.logginghouse.client.ids.multipart;
+package com.truzzt.extension.logginghouse.client.multipart.ids.multipart;
 
 import de.fraunhofer.iais.eis.Message;
 import org.jetbrains.annotations.NotNull;

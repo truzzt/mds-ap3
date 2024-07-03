@@ -13,7 +13,7 @@
  *
  */
 
-package com.truzzt.extension.logginghouse.client.ids.multipart;
+package com.truzzt.extension.logginghouse.client.multipart.ids.multipart;
 
 public final class IdsConstants {
 

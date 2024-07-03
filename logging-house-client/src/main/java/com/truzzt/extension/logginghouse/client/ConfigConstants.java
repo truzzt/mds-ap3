@@ -11,4 +11,8 @@ public class ConfigConstants {
     static final String LOGGINGHOUSE_FLYWAY_CLEAN_SETTING = "edc.logginghouse.client.flyway.clean";
 
     static final String LOGGINGHOUSE_EXTENSION_MAX_WORKERS = "edc.logginghouse.client.workers.max";
+
+    static final String LOGGINGHOUSE_EXTENSION_WORKERS_DELAY = "edc.logginghouse.client.workers.delay";
+
+    static final String LOGGINGHOUSE_EXTENSION_WORKERS_PERIOD = "edc.logginghouse.client.workers.period";
 }

@@ -12,7 +12,7 @@
  *
  */
 
-package com.truzzt.extension.logginghouse.client.ids.jsonld;
+package com.truzzt.extension.logginghouse.client.multipart.ids.jsonld;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;

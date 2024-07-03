@@ -14,18 +14,15 @@
 
 package com.truzzt.extension.logginghouse.client.flyway.connection;
 
-import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.system.configuration.Config;
 
-import static org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry.DEFAULT_DATASOURCE;
-
 public class DatasourceProperties {
-    private static final String LOGGING_HOUSE_DATASOURCE = "logginghouse";
+    public static final String LOGGING_HOUSE_DATASOURCE = "logginghouse";
 
-    private static final String DATASOURCE_SETTING_NAME = "edc.datasource.%s.name";
-    private static final String DATASOURCE_SETTING_JDBC_URL = "edc.datasource.%s.url";
-    private static final String DATASOURCE_SETTING_USER = "edc.datasource.%s.user";
-    private static final String DATASOURCE_SETTING_PASSWORD = "edc.datasource.%s.password";
+    private static final String DATASOURCE_SETTING_NAME = "edc.datasource.logginghouse.name";
+    private static final String DATASOURCE_SETTING_JDBC_URL = "edc.datasource.logginghouse.url";
+    private static final String DATASOURCE_SETTING_USER = "edc.datasource.logginghouse.user";
+    private static final String DATASOURCE_SETTING_PASSWORD = "edc.datasource.logginghouse.password";
 
     private final String name;
     private final String jdbcUrl;
@@ -33,25 +30,10 @@ public class DatasourceProperties {
     private final String password;
 
     public DatasourceProperties(Config config) {
-        name = getSetting(config, String.format(DATASOURCE_SETTING_NAME, LOGGING_HOUSE_DATASOURCE),
-                String.format(DATASOURCE_SETTING_NAME, DEFAULT_DATASOURCE));
-
-        jdbcUrl = getSetting(config, String.format(DATASOURCE_SETTING_JDBC_URL, LOGGING_HOUSE_DATASOURCE),
-                String.format(DATASOURCE_SETTING_JDBC_URL, DEFAULT_DATASOURCE));
-
-        user = getSetting(config, String.format(DATASOURCE_SETTING_USER, LOGGING_HOUSE_DATASOURCE),
-                String.format(DATASOURCE_SETTING_USER, DEFAULT_DATASOURCE));
-
-        password = getSetting(config, String.format(DATASOURCE_SETTING_PASSWORD, LOGGING_HOUSE_DATASOURCE),
-                String.format(DATASOURCE_SETTING_PASSWORD, DEFAULT_DATASOURCE));
-    }
-
-    private String getSetting(Config config, String setting, String defaultSetting) {
-        try {
-            return config.getString(setting);
-        } catch (EdcException e) {
-            return config.getString(defaultSetting);
-        }
+        name = config.getString(DATASOURCE_SETTING_NAME);
+        jdbcUrl = config.getString(DATASOURCE_SETTING_JDBC_URL);
+        user = config.getString(DATASOURCE_SETTING_USER);
+        password = config.getString(DATASOURCE_SETTING_PASSWORD);
     }
 
     public String getName() {

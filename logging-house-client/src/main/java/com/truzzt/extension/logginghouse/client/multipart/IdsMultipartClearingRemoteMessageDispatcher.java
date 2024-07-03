@@ -14,8 +14,8 @@
 
 package com.truzzt.extension.logginghouse.client.multipart;
 
-import com.truzzt.extension.logginghouse.client.ids.multipart.IdsMultipartRemoteMessageDispatcher;
-import com.truzzt.extension.logginghouse.client.ids.multipart.IdsMultipartSender;
+import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.IdsMultipartRemoteMessageDispatcher;
+import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.IdsMultipartSender;
 
 public class IdsMultipartClearingRemoteMessageDispatcher extends IdsMultipartRemoteMessageDispatcher {
 

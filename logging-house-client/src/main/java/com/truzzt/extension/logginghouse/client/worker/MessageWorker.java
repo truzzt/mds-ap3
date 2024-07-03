@@ -14,12 +14,14 @@
 
 package com.truzzt.extension.logginghouse.client.worker;
 
-import com.truzzt.extension.logginghouse.client.messages.CreateProcessMessage;
-import com.truzzt.extension.logginghouse.client.messages.LogMessage;
+import com.truzzt.extension.logginghouse.client.events.messages.CreateProcessMessage;
+import com.truzzt.extension.logginghouse.client.events.messages.LogMessage;
+import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessage;
 import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.message.RemoteMessageDispatcherRegistry;
 import org.eclipse.edc.spi.monitor.Monitor;
+import org.eclipse.edc.spi.response.StatusResult;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -34,13 +36,16 @@ public class MessageWorker {
     private final RemoteMessageDispatcherRegistry dispatcherRegistry;
     private final URI connectorBaseUrl;
     private final URL loggingHouseUrl;
+    private final LoggingHouseMessageStore store;
     private final String workerId;
 
-    public MessageWorker(Monitor monitor, RemoteMessageDispatcherRegistry dispatcherRegistry, URI connectorBaseUrl, URL loggingHouseUrl) {
+    public MessageWorker(Monitor monitor, RemoteMessageDispatcherRegistry dispatcherRegistry, URI connectorBaseUrl, URL loggingHouseUrl,
+                         LoggingHouseMessageStore store) {
         this.monitor = monitor;
         this.dispatcherRegistry = dispatcherRegistry;
         this.connectorBaseUrl = connectorBaseUrl;
         this.loggingHouseUrl = loggingHouseUrl;
+        this.store = store;
 
         workerId = "Worker-" + UUID.randomUUID();
     }
@@ -64,30 +69,37 @@ public class MessageWorker {
 
     public void process(LoggingHouseMessage message) {
         try {
-                var pid = message.getProcessId();
+            var pid = message.getProcessId();
 
-                // Create Process
+            // Create Process
+            if (message.getCreateProcess()) {
                 var extendedProcessUrl = new URL(loggingHouseUrl + "/process/" + pid);
                 try {
-                    createProcess(message, extendedProcessUrl);
-                } catch (Exception e) {
-                    monitor.warning("Could not create process in LoggingHouse: " + e.getMessage());
-                }
+                    createProcess(message, extendedProcessUrl).join();
 
-                // Log Contract Agreement
-                var extendedLogUrl = new URL(loggingHouseUrl + "/messages/log/" + pid);
-                try {
-                    logMessage(message, extendedLogUrl);
                 } catch (Exception e) {
-                    monitor.warning("Could not log message to LoggingHouse: " + e.getMessage());
+                    throw new EdcException("Could not create process in LoggingHouse", e);
                 }
+            }
+
+            // Log Message
+            var extendedLogUrl = new URL(loggingHouseUrl + "/messages/log/" + pid);
+            try {
+                logMessage(message, extendedLogUrl).join();
+
+            } catch (Exception e) {
+                throw new EdcException("Could not log message to LoggingHouse", e);
+            }
+
+            // Update Status
+            store.updateSent(message.getId());
 
         } catch (MalformedURLException e) {
             throw new EdcException("Could not create extended clearinghouse url.");
         }
     }
 
-    public void createProcess(LoggingHouseMessage message, URL loggingHouseUrl) {
+    public CompletableFuture<StatusResult<Object>> createProcess(LoggingHouseMessage message, URL loggingHouseUrl) {
 
         List<String> processOwners = new ArrayList<>();
         processOwners.add(message.getConsumerId());
@@ -96,15 +108,15 @@ public class MessageWorker {
         monitor.info("Creating process in LoggingHouse with id: " + message.getProcessId());
         var logMessage = new CreateProcessMessage(loggingHouseUrl, connectorBaseUrl, message.getProcessId(), processOwners);
 
-        dispatcherRegistry.dispatch(Object.class, logMessage);
+        return dispatcherRegistry.dispatch(Object.class, logMessage);
     }
 
-    public void logMessage(LoggingHouseMessage message, URL clearingHouseLogUrl) {
+    public CompletableFuture<StatusResult<Object>> logMessage(LoggingHouseMessage message, URL clearingHouseLogUrl) {
 
         monitor.info("Logging message to LoggingHouse with type " + message.getEventType() + " and id " + message.getEventId());
         var logMessage = new LogMessage(clearingHouseLogUrl, connectorBaseUrl, message.getEventToLog());
 
-        dispatcherRegistry.dispatch(Object.class, logMessage);
+         return dispatcherRegistry.dispatch(Object.class, logMessage);
     }
 
 }

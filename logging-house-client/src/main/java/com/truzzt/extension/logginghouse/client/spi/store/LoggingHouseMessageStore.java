@@ -22,5 +22,7 @@ public interface LoggingHouseMessageStore {
 
     void save(LoggingHouseMessage message);
 
-    List<LoggingHouseMessage> listNotSent();
+    List<LoggingHouseMessage> listPending();
+
+    void updateSent(long id);
 }

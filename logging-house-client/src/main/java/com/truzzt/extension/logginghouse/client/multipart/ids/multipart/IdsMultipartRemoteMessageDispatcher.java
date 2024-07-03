@@ -12,7 +12,7 @@
  *
  */
 
-package com.truzzt.extension.logginghouse.client.ids.multipart;
+package com.truzzt.extension.logginghouse.client.multipart.ids.multipart;
 
 import org.eclipse.edc.connector.transfer.spi.types.protocol.TransferCompletionMessage;
 import org.eclipse.edc.connector.transfer.spi.types.protocol.TransferStartMessage;

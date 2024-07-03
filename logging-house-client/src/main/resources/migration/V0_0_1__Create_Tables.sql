@@ -17,9 +17,18 @@
 CREATE TABLE IF NOT EXISTS edc_logging_house_message
 (
     logging_house_message_id BIGSERIAL NOT NULL,
+    event_type VARCHAR NOT NULL,
+    event_id VARCHAR NOT NULL,
     event_to_log JSON NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    sent_at TIMESTAMP NOT NULL,
+    create_process BOOLEAN NOT NULL,
+    process_id VARCHAR NOT NULL,
+    consumer_id VARCHAR NOT NULL,
+    provider_id VARCHAR NOT NULL,
+    status VARCHAR NOT NULL,
+    created_at BIGINT NOT NULL,
+    sent_at BIGINT,
     PRIMARY KEY (logging_house_message_id)
 );
 COMMENT ON COLUMN edc_logging_house_message.event_to_log IS 'Event to log serialized as JSON';
+
+CREATE INDEX IF NOT EXISTS idx_edc_logging_house_message_status ON edc_logging_house_message (status);

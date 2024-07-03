@@ -21,11 +21,34 @@ public class BaseSqlDialectStatements implements LoggingHouseEventStatements {
 
     @Override
     public String getInsertTemplate() {
-        return format("INSERT INTO %s (%s, %s) VALUES (?%s, ?)",
+        return format("INSERT INTO %s (%s, %s, %s, %s, %s, %s, %s, %s, %s) VALUES (?, ?, ?%s, ?, ?, ?, ?, ?, ?)",
                 getLoggingHouseMessageTable(),
+                getEventTypeColumn(),
+                getEventIdColumn(),
                 getEventToLogColumn(),
+                getCreateProcessColumn(),
+                getProcessIdColumn(),
+                getConsumerIdColumn(),
+                getProviderIdColumn(),
+                getStatusColumn(),
                 getCreatedAtColumn(),
                 getFormatAsJsonOperator()
         );
+    }
+
+    @Override
+    public String getSelectPendingStatement() {
+        return format("SELECT * FROM %s WHERE %s = ?",
+                getLoggingHouseMessageTable(),
+                getStatusColumn());
+    }
+
+    @Override
+    public String getUpdateSentTemplate() {
+        return format("UPDATE %s SET %s = ?, %s = ? WHERE %s = ?",
+                getLoggingHouseMessageTable(),
+                getStatusColumn(),
+                getSentAtColumn(),
+                getIdColumn());
     }
 }

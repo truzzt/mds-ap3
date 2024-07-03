@@ -12,10 +12,11 @@
  *
  */
 
-package com.truzzt.extension.logginghouse.client;
+package com.truzzt.extension.logginghouse.client.events;
 
 import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessage;
+import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessageStatus;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationFinalized;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
 import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
@@ -48,26 +49,6 @@ public class LoggingHouseEventSubscriber implements EventSubscriber {
         this.monitor = monitor;
     }
 
-    public void storeContractAgreement(ContractAgreement contractAgreement) {
-        monitor.info("Storing ContractAgreement to send to LoggingHouse");
-
-        var message = LoggingHouseMessage.Builder.newInstance()
-                .eventToLog(contractAgreement)
-                .createdAt(ZonedDateTime.now())
-                .build();
-        loggingHouseMessageStore.save(message);
-    }
-
-    public void storeTransferProcess(TransferProcess transferProcess) {
-        monitor.info("Storing TransferProcess to send to LoggingHouse");
-
-        var message = LoggingHouseMessage.Builder.newInstance()
-                .eventToLog(transferProcess)
-                .createdAt(ZonedDateTime.now())
-                .build();
-        loggingHouseMessageStore.save(message);
-    }
-
     @Override
     public <E extends Event> void on(EventEnvelope<E> event) {
         if (event.getPayload() instanceof ContractNegotiationFinalized contractNegotiationFinalized) {
@@ -91,7 +72,7 @@ public class LoggingHouseEventSubscriber implements EventSubscriber {
         }
     }
 
-    private ContractAgreement resolveContractAgreement(ContractNegotiationFinalized contractNegotiationFinalized) throws NullPointerException {
+    private ContractAgreement resolveContractAgreement(ContractNegotiationFinalized contractNegotiationFinalized) {
         var contractNegotiationId = contractNegotiationFinalized.getContractNegotiationId();
         var contractNegotiation = contractNegotiationStore.findById(contractNegotiationId);
         return Objects.requireNonNull(contractNegotiation).getContractAgreement();
@@ -100,5 +81,37 @@ public class LoggingHouseEventSubscriber implements EventSubscriber {
     private TransferProcess resolveTransferProcess(TransferProcessEvent transferProcessEvent) {
         var transferProcessId = transferProcessEvent.getTransferProcessId();
         return transferProcessStore.findById(transferProcessId);
+    }
+
+    public void storeContractAgreement(ContractAgreement contractAgreement) {
+        monitor.info("Storing ContractAgreement to send to LoggingHouse");
+
+        var message = LoggingHouseMessage.Builder.newInstance()
+                .eventType(contractAgreement.getClass())
+                .eventId(contractAgreement.getId())
+                .eventToLog(contractAgreement)
+                .createProcess(true)
+                .processId(contractAgreement.getId())
+                .consumerId(contractAgreement.getConsumerId())
+                .providerId(contractAgreement.getProviderId())
+                .status(LoggingHouseMessageStatus.PENDING)
+                .createdAt(ZonedDateTime.now())
+                .build();
+        loggingHouseMessageStore.save(message);
+    }
+
+    public void storeTransferProcess(TransferProcess transferProcess) {
+        monitor.info("Storing TransferProcess to send to LoggingHouse");
+
+        var message = LoggingHouseMessage.Builder.newInstance()
+                .eventType(transferProcess.getClass())
+                .eventId(transferProcess.getId())
+                .eventToLog(transferProcess)
+                .createProcess(false)
+                .processId(transferProcess.getContractId())
+                .status(LoggingHouseMessageStatus.PENDING)
+                .createdAt(ZonedDateTime.now())
+                .build();
+        loggingHouseMessageStore.save(message);
     }
 }

@@ -34,8 +34,9 @@ import java.util.stream.IntStream;
 
 import static java.lang.String.format;
 
-public class WorkersManager {
+public class LoggingHouseWorkersManager {
 
+    private final WorkersExecutor executor;
     private final Monitor monitor;
     private final int maxWorkers;
     private final LoggingHouseMessageStore store;
@@ -43,12 +44,14 @@ public class WorkersManager {
     private final URI connectorBaseUrl;
     private final URL loggingHouseUrl;
 
-    public WorkersManager(Monitor monitor,
-                          int maxWorkers,
-                          LoggingHouseMessageStore store,
-                          RemoteMessageDispatcherRegistry dispatcherRegistry,
-                          Hostname hostname,
-                          URL loggingHouseUrl) {
+    public LoggingHouseWorkersManager(WorkersExecutor executor,
+                                      Monitor monitor,
+                                      int maxWorkers,
+                                      LoggingHouseMessageStore store,
+                                      RemoteMessageDispatcherRegistry dispatcherRegistry,
+                                      Hostname hostname,
+                                      URL loggingHouseUrl) {
+        this.executor = executor;
         this.monitor = monitor;
         this.maxWorkers = maxWorkers;
         this.store = store;
@@ -62,8 +65,15 @@ public class WorkersManager {
         }
     }
 
-    public void run() {
-        List<LoggingHouseMessage> messages = store.listNotSent();
+    public void execute() {
+        executor.run(() -> {
+            processPending();
+        });
+
+    }
+
+    private void processPending() {
+        List<LoggingHouseMessage> messages = store.listPending();
         if (messages.isEmpty()) {
             monitor.warning("No Messages to send, aborting execution");
             return;
@@ -118,12 +128,12 @@ public class WorkersManager {
     private ArrayBlockingQueue<MessageWorker> createWorkers(int numWorkers) {
 
         return new ArrayBlockingQueue<>(numWorkers, true, IntStream.range(0, numWorkers)
-                .mapToObj(i -> new MessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl))
+                .mapToObj(i -> new MessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl, store))
                 .collect(Collectors.toList()));
     }
 
     private String log(String input) {
-        return "WorkersManager: " + input;
+        return "LoggingHouseWorkersManager: " + input;
     }
 
     private URI getConnectorBaseUrl(Hostname hostname) throws URISyntaxException {

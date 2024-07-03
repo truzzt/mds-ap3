@@ -14,24 +14,24 @@
 
 package com.truzzt.extension.logginghouse.client;
 
+import com.truzzt.extension.logginghouse.client.events.LoggingHouseEventSubscriber;
 import com.truzzt.extension.logginghouse.client.flyway.FlywayService;
+import com.truzzt.extension.logginghouse.client.flyway.connection.DatasourceProperties;
 import com.truzzt.extension.logginghouse.client.flyway.migration.DatabaseMigrationManager;
-import com.truzzt.extension.logginghouse.client.ids.jsonld.JsonLd;
-import com.truzzt.extension.logginghouse.client.ids.multipart.IdsMultipartSender;
-import com.truzzt.extension.logginghouse.client.messages.CreateProcessMessageSender;
-import com.truzzt.extension.logginghouse.client.messages.LogMessageSender;
+import com.truzzt.extension.logginghouse.client.multipart.ids.jsonld.JsonLd;
+import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.IdsMultipartSender;
+import com.truzzt.extension.logginghouse.client.events.messages.CreateProcessMessageSender;
+import com.truzzt.extension.logginghouse.client.events.messages.LogMessageSender;
 import com.truzzt.extension.logginghouse.client.multipart.IdsMultipartClearingRemoteMessageDispatcher;
 import com.truzzt.extension.logginghouse.client.multipart.MultiContextJsonLdSerializer;
 import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.store.sql.SqlLoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.store.sql.schema.postgres.PostgresDialectStatements;
-import com.truzzt.extension.logginghouse.client.worker.WorkersManager;
+import com.truzzt.extension.logginghouse.client.worker.LoggingHouseWorkersManager;
+import com.truzzt.extension.logginghouse.client.worker.WorkersExecutor;
 import de.fraunhofer.iais.eis.LogMessage;
 import de.fraunhofer.iais.eis.RequestMessage;
-import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAccepted;
-import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationAgreed;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationFinalized;
-import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationTerminated;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
 import org.eclipse.edc.connector.transfer.spi.event.TransferProcessFailed;
 import org.eclipse.edc.connector.transfer.spi.event.TransferProcessInitiated;
@@ -41,7 +41,9 @@ import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
 import org.eclipse.edc.connector.transfer.spi.event.TransferProcessStarted;
 import org.eclipse.edc.connector.transfer.spi.event.TransferProcessCompleted;
 
+import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
+import org.eclipse.edc.runtime.metamodel.annotation.Requires;
 import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.asset.AssetIndex;
 import org.eclipse.edc.spi.event.EventRouter;
@@ -59,18 +61,39 @@ import org.eclipse.edc.transaction.spi.TransactionContext;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.Map;
 
-import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_ENABLED;
-import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_SERVER_URL_SETTING;
-import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_FLYWAY_REPAIR_SETTING;
-import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_FLYWAY_CLEAN_SETTING;
-import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_EXTENSION_MAX_WORKERS;
+import static com.truzzt.extension.logginghouse.client.ConfigConstants.*;
 
+@Extension(value = LoggingHouseClientExtension.NAME)
+@Requires(value = {
+    Hostname.class,
+
+    TypeManager.class,
+    EventRouter.class,
+    IdentityService.class,
+    RemoteMessageDispatcherRegistry.class,
+
+    DataSourceRegistry.class,
+    TransactionContext.class,
+    QueryExecutor.class,
+
+    ContractNegotiationStore.class,
+    TransferProcessStore.class,
+    AssetIndex.class
+})
 public class LoggingHouseClientExtension implements ServiceExtension {
 
-    public static final String LOGGINGHOUSE_CLIENT_EXTENSION = "LoggingHouseClientExtension";
+    public static final String NAME = "LoggingHouseClientExtension";
     private static final String TYPE_MANAGER_SERIALIZER_KEY = "ids-clearinghouse";
+    private static final Map<String, String> CONTEXT_MAP = Map.of(
+            "cat", "http://w3id.org/mds/data-categories#",
+            "ids", "https://w3id.org/idsa/core/",
+            "idsc", "https://w3id.org/idsa/code/");
+
+    @Inject
+    private Hostname hostname;
 
     @Inject
     private TypeManager typeManager;
@@ -80,9 +103,6 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     private IdentityService identityService;
     @Inject
     private RemoteMessageDispatcherRegistry dispatcherRegistry;
-
-    @Inject
-    private Hostname hostname;
 
     @Inject
     private DataSourceRegistry dataSourceRegistry;
@@ -98,20 +118,14 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     @Inject
     private AssetIndex assetIndex;
 
-    private static final Map<String, String> CONTEXT_MAP = Map.of(
-            "cat", "http://w3id.org/mds/data-categories#",
-            "ids", "https://w3id.org/idsa/core/",
-            "idsc", "https://w3id.org/idsa/code/");
-
     public Monitor monitor;
     private boolean enabled;
     private URL loggingHouseLogUrl;
-
-    private WorkersManager workersManager;
+    private LoggingHouseWorkersManager workersManager;
 
     @Override
     public String name() {
-        return LOGGINGHOUSE_CLIENT_EXTENSION;
+        return NAME;
     }
 
     @Override
@@ -168,7 +182,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     private SqlLoggingHouseMessageStore initializeLoggingHouseMessageStore(TypeManager typeManager) {
         return new SqlLoggingHouseMessageStore(
                 dataSourceRegistry,
-                DataSourceRegistry.DEFAULT_DATASOURCE,
+                DatasourceProperties.LOGGING_HOUSE_DATASOURCE,
                 transactionContext,
                 typeManager.getMapper(),
                 new PostgresDialectStatements(),
@@ -186,9 +200,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
                 monitor);
 
         eventRouter.registerSync(ContractNegotiationFinalized.class, eventSubscriber);
-        eventRouter.registerSync(ContractNegotiationAgreed.class, eventSubscriber);
-        eventRouter.registerSync(ContractNegotiationAccepted.class, eventSubscriber);
-        eventRouter.registerSync(ContractNegotiationTerminated.class, eventSubscriber); // TODO: check pid
+
         eventRouter.registerSync(TransferProcessRequested.class, eventSubscriber);
         eventRouter.registerSync(TransferProcessInitiated.class, eventSubscriber);
         eventRouter.registerSync(TransferProcessStarted.class, eventSubscriber);
@@ -220,8 +232,13 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         monitor.debug("Registered serializers for LoggingHouseClientExtension");
     }
 
-    private WorkersManager initializeWorkersManager(ServiceExtensionContext context, LoggingHouseMessageStore store) {
-        return new WorkersManager(this.monitor,
+    private LoggingHouseWorkersManager initializeWorkersManager(ServiceExtensionContext context, LoggingHouseMessageStore store) {
+        var periodSeconds = context.getSetting(LOGGINGHOUSE_EXTENSION_WORKERS_DELAY, 30);
+        var initialDelaySeconds = context.getSetting(LOGGINGHOUSE_EXTENSION_WORKERS_PERIOD, 10);
+        var executor = new WorkersExecutor(Duration.ofSeconds(periodSeconds), Duration.ofSeconds(initialDelaySeconds), monitor);
+
+        return new LoggingHouseWorkersManager(executor,
+                monitor,
                 context.getSetting(LOGGINGHOUSE_EXTENSION_MAX_WORKERS, 1),
                 store,
                 dispatcherRegistry,
@@ -254,6 +271,8 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         } else {
             monitor.info("Starting Logginghouse client extension.");
         }
+
+        workersManager.execute();
     }
 
     @Override
