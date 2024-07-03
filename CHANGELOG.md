@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/truzzt/mds-ap3/compare/v1.0.0...v1.0.1) (2024-07-03)
+
+
+### Bug Fixes
+
+* use user token on release to trigger event workflows ([f15caa7](https://github.com/truzzt/mds-ap3/commit/f15caa77cd9af588bfa0527b31454457c63a2dbc))
+
 # 1.0.0 (2024-07-03)
 
 
