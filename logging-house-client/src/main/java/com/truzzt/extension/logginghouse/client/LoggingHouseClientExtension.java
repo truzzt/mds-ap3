@@ -275,9 +275,8 @@ public class LoggingHouseClientExtension implements ServiceExtension {
             monitor.info("Skipping start of Logginghouse client extension (disabled).");
         } else {
             monitor.info("Starting Logginghouse client extension.");
+            workersManager.execute();
         }
-
-        workersManager.execute();
     }
 
     @Override

@@ -24,5 +24,5 @@ public interface LoggingHouseMessageStore {
 
     List<LoggingHouseMessage> listPending();
 
-    void updateSent(long id);
+    void updateSent(long id, String receipt);
 }

@@ -14,13 +14,13 @@
 
 package com.truzzt.extension.logginghouse.client.events.messages;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.truzzt.extension.logginghouse.client.multipart.ids.jsonld.JsonLd;
 import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.CalendarUtil;
 import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.IdsConstants;
 import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.IdsMultipartParts;
 import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.MultipartResponse;
 import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.MultipartSenderDelegate;
-import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.ResponseUtil;
 import de.fraunhofer.iais.eis.DynamicAttributeToken;
 import de.fraunhofer.iais.eis.LogMessageBuilder;
 import de.fraunhofer.iais.eis.Message;
@@ -32,9 +32,10 @@ import org.eclipse.edc.spi.asset.AssetIndex;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.List;
 
-public class LogMessageSender implements MultipartSenderDelegate<LogMessage, String> {
+public class LogMessageSender implements MultipartSenderDelegate<LogMessage, LogMessageReceipt> {
 
     Monitor monitor;
     String connectorId;
@@ -70,8 +71,8 @@ public class LogMessageSender implements MultipartSenderDelegate<LogMessage, Str
     }
 
     @Override
-    public MultipartResponse<String> getResponseContent(IdsMultipartParts parts) throws Exception {
-        return ResponseUtil.parseMultipartStringResponse(parts, JsonLd.getObjectMapper());
+    public MultipartResponse<LogMessageReceipt> getResponseContent(IdsMultipartParts parts) throws Exception {
+        return parseLogMessageReceiptResponse(parts, JsonLd.getObjectMapper());
     }
 
     @Override
@@ -131,5 +132,16 @@ public class LogMessageSender implements MultipartSenderDelegate<LogMessage, Str
         jo.put("TransferAssetId", transferProcess.getAssetId());
 
         return jo.toString();
+    }
+
+    public static MultipartResponse<LogMessageReceipt> parseLogMessageReceiptResponse(IdsMultipartParts parts, ObjectMapper objectMapper) throws IOException {
+        var header = objectMapper.readValue(parts.getHeader(), Message.class);
+
+        LogMessageReceipt payload = null;
+        if (parts.getPayload() != null) {
+            payload = objectMapper.readValue(parts.getPayload(), LogMessageReceipt.class);
+        }
+
+        return new MultipartResponse<>(header, payload);
     }
 }

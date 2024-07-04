@@ -16,6 +16,7 @@ package com.truzzt.extension.logginghouse.client.worker;
 
 import com.truzzt.extension.logginghouse.client.events.messages.CreateProcessMessage;
 import com.truzzt.extension.logginghouse.client.events.messages.LogMessage;
+import com.truzzt.extension.logginghouse.client.events.messages.LogMessageReceipt;
 import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessage;
 import org.eclipse.edc.spi.EdcException;
@@ -76,24 +77,24 @@ public class MessageWorker {
                 var extendedProcessUrl = new URL(loggingHouseUrl + "/process/" + pid);
                 try {
                     createProcess(message, extendedProcessUrl).join();
-
                 } catch (Exception e) {
-                    throw new EdcException("Could not create process in LoggingHouse", e);
+                    // TODO: Not fail when process already exists
+                    monitor.warning("CreateProcess returned error (ignore it when the process already exists): " + e.getMessage());
+                    //throw new EdcException("Could not create process in LoggingHouse", e);
                 }
             }
 
             // Log Message
             var extendedLogUrl = new URL(loggingHouseUrl + "/messages/log/" + pid);
             try {
-                logMessage(message, extendedLogUrl).join();
-
+                var response = logMessage(message, extendedLogUrl).join();
+                response.onSuccess(msg -> {
+                    monitor.info("Received receipt successfully from LoggingHouse for message with id " + message.getEventId());
+                    store.updateSent(message.getId(), msg.data());
+                });
             } catch (Exception e) {
                 throw new EdcException("Could not log message to LoggingHouse", e);
             }
-
-            // Update Status
-            store.updateSent(message.getId());
-
         } catch (MalformedURLException e) {
             throw new EdcException("Could not create extended clearinghouse url.");
         }
@@ -111,12 +112,12 @@ public class MessageWorker {
         return dispatcherRegistry.dispatch(Object.class, logMessage);
     }
 
-    public CompletableFuture<StatusResult<Object>> logMessage(LoggingHouseMessage message, URL clearingHouseLogUrl) {
+    public CompletableFuture<StatusResult<LogMessageReceipt>> logMessage(LoggingHouseMessage message, URL clearingHouseLogUrl) {
 
         monitor.info("Logging message to LoggingHouse with type " + message.getEventType() + " and id " + message.getEventId());
         var logMessage = new LogMessage(clearingHouseLogUrl, connectorBaseUrl, message.getEventToLog());
 
-        return dispatcherRegistry.dispatch(Object.class, logMessage);
+        return dispatcherRegistry.dispatch(LogMessageReceipt.class, logMessage);
     }
 
 }
