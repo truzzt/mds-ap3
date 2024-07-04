@@ -74,7 +74,6 @@ public class SqlLoggingHouseMessageStore extends AbstractSqlStore implements Log
                         event.getProcessId(),
                         event.getConsumerId(),
                         event.getProviderId(),
-                        event.getStatus().getCode(),
                         mapFromZonedDateTime(event.getCreatedAt())
                 );
 

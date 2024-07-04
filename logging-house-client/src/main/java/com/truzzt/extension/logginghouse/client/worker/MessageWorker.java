@@ -16,6 +16,7 @@ package com.truzzt.extension.logginghouse.client.worker;
 
 import com.truzzt.extension.logginghouse.client.events.messages.CreateProcessMessage;
 import com.truzzt.extension.logginghouse.client.events.messages.LogMessage;
+import com.truzzt.extension.logginghouse.client.events.messages.LogMessageReceipt;
 import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessage;
 import org.eclipse.edc.spi.EdcException;
@@ -78,7 +79,7 @@ public class MessageWorker {
                     createProcess(message, extendedProcessUrl).join();
                 } catch (Exception e) {
                     // TODO: Not fail when process already exists
-                    monitor.severe("CreateProcess returned error: " + e.getMessage());
+                    monitor.warning("CreateProcess returned error (ignore it when the process already exists): " + e.getMessage());
                     //throw new EdcException("Could not create process in LoggingHouse", e);
                 }
             }
@@ -89,7 +90,7 @@ public class MessageWorker {
                 var response = logMessage(message, extendedLogUrl).join();
                 response.onSuccess(msg -> {
                     monitor.info("Received receipt successfully from LoggingHouse for message with id " + message.getEventId());
-                    store.updateSent(message.getId(), msg);
+                    store.updateSent(message.getId(), msg.data());
                 });
             } catch (Exception e) {
                 throw new EdcException("Could not log message to LoggingHouse", e);
@@ -111,12 +112,12 @@ public class MessageWorker {
         return dispatcherRegistry.dispatch(Object.class, logMessage);
     }
 
-    public CompletableFuture<StatusResult<String>> logMessage(LoggingHouseMessage message, URL clearingHouseLogUrl) {
+    public CompletableFuture<StatusResult<LogMessageReceipt>> logMessage(LoggingHouseMessage message, URL clearingHouseLogUrl) {
 
         monitor.info("Logging message to LoggingHouse with type " + message.getEventType() + " and id " + message.getEventId());
         var logMessage = new LogMessage(clearingHouseLogUrl, connectorBaseUrl, message.getEventToLog());
 
-        return dispatcherRegistry.dispatch(String.class, logMessage);
+        return dispatcherRegistry.dispatch(LogMessageReceipt.class, logMessage);
     }
 
 }
