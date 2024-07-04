@@ -21,7 +21,6 @@ import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.IdsConst
 import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.IdsMultipartParts;
 import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.MultipartResponse;
 import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.MultipartSenderDelegate;
-import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.ResponseUtil;
 import de.fraunhofer.iais.eis.DynamicAttributeToken;
 import de.fraunhofer.iais.eis.LogMessageBuilder;
 import de.fraunhofer.iais.eis.Message;
