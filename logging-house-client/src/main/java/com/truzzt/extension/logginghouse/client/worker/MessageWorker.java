@@ -76,24 +76,24 @@ public class MessageWorker {
                 var extendedProcessUrl = new URL(loggingHouseUrl + "/process/" + pid);
                 try {
                     createProcess(message, extendedProcessUrl).join();
-
                 } catch (Exception e) {
-                    throw new EdcException("Could not create process in LoggingHouse", e);
+                    // TODO: Not fail when process already exists
+                    monitor.severe("CreateProcess returned error: " + e.getMessage());
+                    //throw new EdcException("Could not create process in LoggingHouse", e);
                 }
             }
 
             // Log Message
             var extendedLogUrl = new URL(loggingHouseUrl + "/messages/log/" + pid);
             try {
-                logMessage(message, extendedLogUrl).join();
-
+                var response = logMessage(message, extendedLogUrl).join();
+                response.onSuccess(msg -> {
+                    monitor.info("Received receipt successfully from LoggingHouse for message with id " + message.getEventId());
+                    store.updateSent(message.getId(), msg);
+                });
             } catch (Exception e) {
                 throw new EdcException("Could not log message to LoggingHouse", e);
             }
-
-            // Update Status
-            store.updateSent(message.getId());
-
         } catch (MalformedURLException e) {
             throw new EdcException("Could not create extended clearinghouse url.");
         }
@@ -111,12 +111,12 @@ public class MessageWorker {
         return dispatcherRegistry.dispatch(Object.class, logMessage);
     }
 
-    public CompletableFuture<StatusResult<Object>> logMessage(LoggingHouseMessage message, URL clearingHouseLogUrl) {
+    public CompletableFuture<StatusResult<String>> logMessage(LoggingHouseMessage message, URL clearingHouseLogUrl) {
 
         monitor.info("Logging message to LoggingHouse with type " + message.getEventType() + " and id " + message.getEventId());
         var logMessage = new LogMessage(clearingHouseLogUrl, connectorBaseUrl, message.getEventToLog());
 
-        return dispatcherRegistry.dispatch(Object.class, logMessage);
+        return dispatcherRegistry.dispatch(String.class, logMessage);
     }
 
 }

@@ -38,16 +38,16 @@ public class BaseSqlDialectStatements implements LoggingHouseEventStatements {
 
     @Override
     public String getSelectPendingStatement() {
-        return format("SELECT * FROM %s WHERE %s = ?",
+        return format("SELECT * FROM %s WHERE %s IS NULL",
                 getLoggingHouseMessageTable(),
-                getStatusColumn());
+                getReceiptColumn());
     }
 
     @Override
     public String getUpdateSentTemplate() {
         return format("UPDATE %s SET %s = ?, %s = ? WHERE %s = ?",
                 getLoggingHouseMessageTable(),
-                getStatusColumn(),
+                getReceiptColumn(),
                 getSentAtColumn(),
                 getIdColumn());
     }

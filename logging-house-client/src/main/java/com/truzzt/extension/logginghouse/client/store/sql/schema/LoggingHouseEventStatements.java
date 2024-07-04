@@ -67,6 +67,10 @@ public interface LoggingHouseEventStatements {
         return "sent_at";
     }
 
+    default String getReceiptColumn() {
+        return "receipt";
+    }
+
     String getInsertTemplate();
 
     String getSelectPendingStatement();
