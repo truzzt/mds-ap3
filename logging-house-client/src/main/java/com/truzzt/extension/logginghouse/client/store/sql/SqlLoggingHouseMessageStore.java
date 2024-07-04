@@ -134,10 +134,10 @@ public class SqlLoggingHouseMessageStore extends AbstractSqlStore implements Log
         }
 
         LoggingHouseMessageStatus status;
-        try {
-            status = LoggingHouseMessageStatus.codeOf(resultSet.getString(statements.getStatusColumn()));
-        } catch (EdcPersistenceException e) {
-            throw new EdcPersistenceException("Error eventToLog JSON column", e);
+        if (resultSet.getString(statements.getReceiptColumn()) == null) {
+            status = LoggingHouseMessageStatus.PENDING;
+        } else {
+            status = LoggingHouseMessageStatus.SENT;
         }
 
         return LoggingHouseMessage.Builder.newInstance()

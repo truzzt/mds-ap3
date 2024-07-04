@@ -21,7 +21,7 @@ public class BaseSqlDialectStatements implements LoggingHouseEventStatements {
 
     @Override
     public String getInsertTemplate() {
-        return format("INSERT INTO %s (%s, %s, %s, %s, %s, %s, %s, %s, %s) VALUES (?, ?, ?%s, ?, ?, ?, ?, ?, ?)",
+        return format("INSERT INTO %s (%s, %s, %s, %s, %s, %s, %s, %s) VALUES (?, ?, ?%s, ?, ?, ?, ?, ?)",
                 getLoggingHouseMessageTable(),
                 getEventTypeColumn(),
                 getEventIdColumn(),
@@ -30,7 +30,6 @@ public class BaseSqlDialectStatements implements LoggingHouseEventStatements {
                 getProcessIdColumn(),
                 getConsumerIdColumn(),
                 getProviderIdColumn(),
-                getStatusColumn(),
                 getCreatedAtColumn(),
                 getFormatAsJsonOperator()
         );
