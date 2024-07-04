@@ -61,7 +61,6 @@ public class SqlLoggingHouseMessageStore extends AbstractSqlStore implements Log
         Objects.requireNonNull(event.getEventToLog());
         Objects.requireNonNull(event.getCreateProcess());
         Objects.requireNonNull(event.getProcessId());
-        Objects.requireNonNull(event.getStatus());
         Objects.requireNonNull(event.getCreatedAt());
 
         transactionContext.execute(() -> {
@@ -122,7 +121,6 @@ public class SqlLoggingHouseMessageStore extends AbstractSqlStore implements Log
     }
 
     private LoggingHouseMessage mapResultSet(ResultSet resultSet) throws Exception {
-
         Class eventType = toClass(resultSet.getString(statements.getEventTypeColumn()));
 
         Object eventToLog;
