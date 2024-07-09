@@ -33,10 +33,10 @@ public class WorkersExecutor {
 
     public void run(Runnable task) {
         var ses = Executors.newSingleThreadScheduledExecutor();
-        ses.scheduleAtFixedRate(catchExceptions(task), withInitialDelay.toMillis(), schedule.toMillis(), TimeUnit.MILLISECONDS);
+        ses.scheduleAtFixedRate(execute(task), withInitialDelay.toMillis(), schedule.toMillis(), TimeUnit.MILLISECONDS);
     }
 
-    private Runnable catchExceptions(Runnable original) {
+    private Runnable execute(Runnable original) {
         return () -> {
             try {
                 original.run();

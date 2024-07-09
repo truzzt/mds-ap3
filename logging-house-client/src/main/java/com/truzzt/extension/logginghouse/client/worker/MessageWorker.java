@@ -40,7 +40,9 @@ public class MessageWorker {
     private final LoggingHouseMessageStore store;
     private final String workerId;
 
-    public MessageWorker(Monitor monitor, RemoteMessageDispatcherRegistry dispatcherRegistry, URI connectorBaseUrl, URL loggingHouseUrl,
+    public MessageWorker(Monitor monitor,
+                         RemoteMessageDispatcherRegistry dispatcherRegistry,
+                         URI connectorBaseUrl, URL loggingHouseUrl,
                          LoggingHouseMessageStore store) {
         this.monitor = monitor;
         this.dispatcherRegistry = dispatcherRegistry;

@@ -57,12 +57,7 @@ public class LoggingHouseWorkersManager {
         this.store = store;
         this.dispatcherRegistry = dispatcherRegistry;
         this.loggingHouseUrl = loggingHouseUrl;
-
-        try {
-            connectorBaseUrl = getConnectorBaseUrl(hostname);
-        } catch (URISyntaxException e) {
-            throw new EdcException("Could not create connectorBaseUrl. Hostname can be set using:" + hostname, e);
-        }
+        this.connectorBaseUrl = getConnectorBaseUrl(hostname);
     }
 
     public void execute() {
@@ -72,7 +67,7 @@ public class LoggingHouseWorkersManager {
 
     }
 
-    private void processPending() {
+    void processPending() {
         List<LoggingHouseMessage> messages = store.listPending();
         if (messages.isEmpty()) {
             monitor.warning("No Messages to send, aborting execution");
@@ -95,11 +90,6 @@ public class LoggingHouseWorkersManager {
             }
 
             var item = allItems.poll();
-            if (item == null) {
-                monitor.warning(log("WorkItem queue empty, abort execution"));
-                break;
-            }
-
             worker.run(item)
                     .whenComplete((updateResponse, throwable) -> {
                         if (throwable != null) {
@@ -113,7 +103,7 @@ public class LoggingHouseWorkersManager {
     }
 
     @Nullable
-    private MessageWorker nextAvailableWorker(ArrayBlockingQueue<MessageWorker> availableWorkers) {
+    MessageWorker nextAvailableWorker(ArrayBlockingQueue<MessageWorker> availableWorkers) {
         MessageWorker worker = null;
         try {
             monitor.debug(log("Getting next available worker"));
@@ -136,7 +126,11 @@ public class LoggingHouseWorkersManager {
         return "LoggingHouseWorkersManager: " + input;
     }
 
-    private URI getConnectorBaseUrl(Hostname hostname) throws URISyntaxException {
-        return new URI(String.format("https://%s/", hostname.get()));
+    private URI getConnectorBaseUrl(Hostname hostname) {
+        try {
+            return new URI(String.format("https://%s/", hostname.get()));
+        } catch (URISyntaxException e) {
+            throw new EdcException("Could not create connectorBaseUrl. Hostname can be set using:" + hostname, e);
+        }
     }
 }

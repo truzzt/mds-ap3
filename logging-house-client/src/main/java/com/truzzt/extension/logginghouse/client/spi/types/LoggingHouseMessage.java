@@ -18,6 +18,10 @@ import java.time.ZonedDateTime;
 import java.util.Objects;
 
 public class LoggingHouseMessage {
+
+    private LoggingHouseMessage() {
+    }
+
     private Long id;
     private Class<?> eventType;
     private String eventId;
@@ -26,13 +30,12 @@ public class LoggingHouseMessage {
     private String processId;
     private String consumerId;
     private String providerId;
-    private LoggingHouseMessageStatus status;
     private ZonedDateTime createdAt;
 
     public Long getId() {
         return id;
     }
-    public Class getEventType() {
+    public Class<?> getEventType() {
         return eventType;
     }
     public String getEventId() {
@@ -53,9 +56,6 @@ public class LoggingHouseMessage {
     public String getProviderId() {
         return providerId;
     }
-    public LoggingHouseMessageStatus getStatus() {
-        return status;
-    }
     public ZonedDateTime getCreatedAt() {
         return createdAt;
     }
@@ -74,7 +74,7 @@ public class LoggingHouseMessage {
             this.event.id = id;
             return this;
         }
-        public LoggingHouseMessage.Builder eventType(Class eventType) {
+        public LoggingHouseMessage.Builder eventType(Class<?> eventType) {
             this.event.eventType = eventType;
             return this;
         }
@@ -102,10 +102,6 @@ public class LoggingHouseMessage {
             this.event.providerId = providerId;
             return this;
         }
-        public LoggingHouseMessage.Builder status(LoggingHouseMessageStatus status) {
-            this.event.status = status;
-            return this;
-        }
         public LoggingHouseMessage.Builder createdAt(ZonedDateTime createdAt) {
             this.event.createdAt = createdAt;
             return this;
@@ -117,7 +113,6 @@ public class LoggingHouseMessage {
             Objects.requireNonNull(this.event.eventToLog, "Message eventToLog must not be null");
             Objects.requireNonNull(this.event.createProcess, "Message createProcess must not be null");
             Objects.requireNonNull(this.event.processId, "Message processId must not be null");
-            Objects.requireNonNull(this.event.status, "Message status must not be null");
             Objects.requireNonNull(this.event.createdAt, "Message createdAt must not be null");
             return this.event;
         }

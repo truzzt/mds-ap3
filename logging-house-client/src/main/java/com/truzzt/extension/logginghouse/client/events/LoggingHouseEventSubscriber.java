@@ -16,7 +16,6 @@ package com.truzzt.extension.logginghouse.client.events;
 
 import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessage;
-import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessageStatus;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationFinalized;
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
 import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
@@ -94,7 +93,6 @@ public class LoggingHouseEventSubscriber implements EventSubscriber {
                 .processId(contractAgreement.getId())
                 .consumerId(contractAgreement.getConsumerId())
                 .providerId(contractAgreement.getProviderId())
-                .status(LoggingHouseMessageStatus.PENDING)
                 .createdAt(ZonedDateTime.now())
                 .build();
         loggingHouseMessageStore.save(message);
@@ -109,7 +107,6 @@ public class LoggingHouseEventSubscriber implements EventSubscriber {
                 .eventToLog(transferProcess)
                 .createProcess(false)
                 .processId(transferProcess.getContractId())
-                .status(LoggingHouseMessageStatus.PENDING)
                 .createdAt(ZonedDateTime.now())
                 .build();
         loggingHouseMessageStore.save(message);
