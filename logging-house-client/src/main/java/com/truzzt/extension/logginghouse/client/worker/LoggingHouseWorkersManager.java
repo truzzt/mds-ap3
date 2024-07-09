@@ -99,17 +99,17 @@ public class LoggingHouseWorkersManager {
             }
 
             CompletableFuture<Boolean> taskFuture = worker.run(item)
-                .whenComplete((updateResponse, throwable) -> {
-                    if (throwable != null) {
-                        monitor.severe(log(format("Unexpected exception happened during in worker %s", worker.getId())), throwable);
-                    } else {
-                        monitor.info(log(format("Worker [%s] is done", worker.getId())));
-                        // Remove item only when processed successfully
-                        allItems.poll();
-                    }
-                    // re-add worker for the next message
-                    availableWorkers.add(worker);
-                });
+                    .whenComplete((updateResponse, throwable) -> {
+                        if (throwable != null) {
+                            monitor.severe(log(format("Unexpected exception happened during in worker %s", worker.getId())), throwable);
+                        } else {
+                            monitor.info(log(format("Worker [%s] is done", worker.getId())));
+                            // Remove item only when processed successfully
+                            allItems.poll();
+                        }
+                        // re-add worker for the next message
+                        availableWorkers.add(worker);
+                    });
 
             // Wait for completion before processing next item
             try {
