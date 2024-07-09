@@ -28,6 +28,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -66,10 +67,7 @@ public class LoggingHouseWorkersManager {
     }
 
     public void execute() {
-        executor.run(() -> {
-            processPending();
-        });
-
+        executor.run(this::processPending);
     }
 
     private void processPending() {
@@ -94,21 +92,31 @@ public class LoggingHouseWorkersManager {
                 continue;
             }
 
-            var item = allItems.poll();
+            var item = allItems.peek();
             if (item == null) {
                 monitor.warning(log("WorkItem queue empty, abort execution"));
                 break;
             }
 
-            worker.run(item)
-                    .whenComplete((updateResponse, throwable) -> {
-                        if (throwable != null) {
-                            monitor.severe(log(format("Unexpected exception happened during in worker %s", worker.getId())), throwable);
-                        } else {
-                            monitor.info(log(format("Worker [%s] is done", worker.getId())));
-                        }
-                        availableWorkers.add(worker);
-                    });
+            CompletableFuture<Boolean> taskFuture = worker.run(item)
+                .whenComplete((updateResponse, throwable) -> {
+                    if (throwable != null) {
+                        monitor.severe(log(format("Unexpected exception happened during in worker %s", worker.getId())), throwable);
+                    } else {
+                        monitor.info(log(format("Worker [%s] is done", worker.getId())));
+                        // Remove item only when processed successfully
+                        allItems.poll();
+                    }
+                    // re-add worker for the next message
+                    availableWorkers.add(worker);
+                });
+
+            // Wait for completion before processing next item
+            try {
+                taskFuture.get();
+            } catch (Exception e) {
+                monitor.severe(log("Unexpected exception happened during in worker"), e);
+            }
         }
     }
 
@@ -132,7 +140,7 @@ public class LoggingHouseWorkersManager {
                 .collect(Collectors.toList()));
     }
 
-    private String log(String input) {
+    private static String log(String input) {
         return "LoggingHouseWorkersManager: " + input;
     }
 
