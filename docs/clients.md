@@ -32,7 +32,7 @@ Once the repository is added and authentication is configured, you can include t
 
 ```kotlin
 dependencies {
-    implementation("logging-house:logging-house-client:0.1.0")
+    implementation("logging-house:logging-house-client:v1.1.0")
 }
 ```
 
@@ -42,7 +42,19 @@ The `logging-house-client` relies on two key environment variables for configura
 
 | Name                                  | Default | Description                                                  |
 | ------------------------------------- | ------- | ------------------------------------------------------------ |
-| `CLEARINGHOUSE_CLIENT_EXTENSION_ENABLED` | `false` | Set to `true` to enable the extension, or `false` to disable it. |
-| `EDC_CLEARINGHOUSE_LOG_URL`           | `none`  | Specify the URL of the Logging-House-Server (e.g., `clearing.demo.truzzt.eu`). |
+| `EDC_LOGGINGHOUSE_EXTENSION_ENABLED` | `false` | Set to `true` to enable the extension, or `false` to disable it. |
+| `EDC_LOGGINGHOUSE_LOG_URL`           | `none`  | Specify the URL of the Logging-House-Server (e.g., `clearing.demo.truzzt.eu`). |
+| `EDC_DATASOURCE_LOGGINGHOUSE_URL` | `none` | Specify the URL of the database (e.g., `postgres://some-url`). |
+| `EDC_DATASOURCE_LOGGINGHOUSE_USER` | `none` | Specify the user of the database. |
+| `EDC_DATASOURCE_LOGGINGHOUSE_PASSWORD` | `none` | Specify the password of the database. |
 
 Ensure these environment variables are set as per your requirements for optimal functionality of the client.
+
+### Advanced Environment Configuration
+| Name                                  | Default | Description                                                  |
+| ------------------------------------- | ------- | ------------------------------------------------------------ |
+| `EDC_LOGGINGHOUSE_EXTENSION_FLYWAY_REPAIR` | `false` | Recreates the flyway history tables, beafore applying the scripts. |
+| `EDC_LOGGINGHOUSE_EXTENSION_FLYWAY_CLEAN` | `false`  | Executes a clean on the database, before applying the scripts. |
+| `EDC_LOGGINGHOUSE_EXTENSION_WORKERS_MAX` | `1` | Maximun number of workers created to handle the pending items. |
+| `EDC_LOGGINGHOUSE_EXTENSION_WORKERS_DELTA` | `30` | Time in seconds, after the connector initializes, to the workers start to run. |
+| `EDC_LOGGINGHOUSE_EXTENSION_WORKERS_PERIOD` | `10` | Time in seconds, between each workers processing. |
