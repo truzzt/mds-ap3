@@ -55,10 +55,6 @@ public interface LoggingHouseEventStatements {
         return "provider_id";
     }
 
-    default String getStatusColumn() {
-        return "status";
-    }
-
     default String getCreatedAtColumn() {
         return "created_at";
     }
