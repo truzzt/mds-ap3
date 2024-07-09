@@ -53,8 +53,8 @@ Ensure these environment variables are set as per your requirements for optimal 
 ### Advanced Environment Configuration
 | Name                                  | Default | Description                                                  |
 | ------------------------------------- | ------- | ------------------------------------------------------------ |
-| `EDC_LOGGINGHOUSE_EXTENSION_FLYWAY_REPAIR` | `false` |  |
-| `EDC_LOGGINGHOUSE_EXTENSION_FLYWAY_CLEAN` | `false`  |  |
-| `EDC_LOGGINGHOUSE_EXTENSION_WORKERS_MAX` | `1` |  |
-| `EDC_LOGGINGHOUSE_EXTENSION_WORKERS_DELTA` | `30` |  |
-| `EDC_LOGGINGHOUSE_EXTENSION_WORKERS_PERIOD` | `30` |  |
+| `EDC_LOGGINGHOUSE_EXTENSION_FLYWAY_REPAIR` | `false` | Recreates the flyway history tables, beafore applying the scripts. |
+| `EDC_LOGGINGHOUSE_EXTENSION_FLYWAY_CLEAN` | `false`  | Executes a clean on the database, before applying the scripts. |
+| `EDC_LOGGINGHOUSE_EXTENSION_WORKERS_MAX` | `1` | Maximun number of workers created to handle the pending items. |
+| `EDC_LOGGINGHOUSE_EXTENSION_WORKERS_DELTA` | `30` | Time in seconds, after the connector initializes, to the workers start to run. |
+| `EDC_LOGGINGHOUSE_EXTENSION_WORKERS_PERIOD` | `10` | Time in seconds, between each workers processing. |
