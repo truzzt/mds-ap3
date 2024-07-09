@@ -190,10 +190,10 @@
 <pre><code class="language-kotlin">repositories {
     mavenCentral()
     maven {
-        url = uri(&quot;https://maven.pkg.github.com/truzzt/mds-ap3&quot;)
+        url = uri("https://maven.pkg.github.com/truzzt/mds-ap3")
         credentials {
-            username = project.findProperty(&quot;gpr.user&quot;) as String? ?: System.getenv(&quot;USERNAME&quot;)
-            password = project.findProperty(&quot;gpr.key&quot;) as String? ?: System.getenv(&quot;TOKEN&quot;)
+            username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+            password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
         }
     }
 }
@@ -204,18 +204,29 @@
 <h3 id="adding-the-dependency"><a class="header" href="#adding-the-dependency">Adding the Dependency</a></h3>
 <p>Once the repository is added and authentication is configured, you can include the package in your dependencies:</p>
 <pre><code class="language-kotlin">dependencies {
-    implementation(&quot;logging-house:logging-house-client:0.1.0&quot;)
+    implementation("logging-house:logging-house-client:v1.1.0")
 }
 </code></pre>
 <h3 id="environment-configuration"><a class="header" href="#environment-configuration">Environment Configuration</a></h3>
 <p>The <code>logging-house-client</code> relies on two key environment variables for configuration:</p>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Default</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>CLEARINGHOUSE_CLIENT_EXTENSION_ENABLED</code></td><td><code>false</code></td><td>Set to <code>true</code> to enable the extension, or <code>false</code> to disable it.</td></tr>
-<tr><td><code>EDC_CLEARINGHOUSE_LOG_URL</code></td><td><code>none</code></td><td>Specify the URL of the Logging-House-Server (e.g., <code>clearing.demo.truzzt.eu</code>).</td></tr>
+<tr><td><code>EDC_LOGGINGHOUSE_EXTENSION_ENABLED</code></td><td><code>false</code></td><td>Set to <code>true</code> to enable the extension, or <code>false</code> to disable it.</td></tr>
+<tr><td><code>EDC_LOGGINGHOUSE_LOG_URL</code></td><td><code>none</code></td><td>Specify the URL of the Logging-House-Server (e.g., <code>clearing.demo.truzzt.eu</code>).</td></tr>
+<tr><td><code>EDC_DATASOURCE_LOGGINGHOUSE_URL</code></td><td><code>none</code></td><td>Specify the URL of the database (e.g., <code>postgres://some-url</code>).</td></tr>
+<tr><td><code>EDC_DATASOURCE_LOGGINGHOUSE_USER</code></td><td><code>none</code></td><td>Specify the user of the database.</td></tr>
+<tr><td><code>EDC_DATASOURCE_LOGGINGHOUSE_PASSWORD</code></td><td><code>none</code></td><td>Specify the password of the database.</td></tr>
 </tbody></table>
 </div>
 <p>Ensure these environment variables are set as per your requirements for optimal functionality of the client.</p>
-
+<h3 id="advanced-environment-configuration"><a class="header" href="#advanced-environment-configuration">Advanced Environment Configuration</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Default</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>EDC_LOGGINGHOUSE_EXTENSION_FLYWAY_REPAIR</code></td><td><code>false</code></td><td>Recreates the flyway history tables, beafore applying the scripts.</td></tr>
+<tr><td><code>EDC_LOGGINGHOUSE_EXTENSION_FLYWAY_CLEAN</code></td><td><code>false</code></td><td>Executes a clean on the database, before applying the scripts.</td></tr>
+<tr><td><code>EDC_LOGGINGHOUSE_EXTENSION_WORKERS_MAX</code></td><td><code>1</code></td><td>Maximun number of workers created to handle the pending items.</td></tr>
+<tr><td><code>EDC_LOGGINGHOUSE_EXTENSION_WORKERS_DELTA</code></td><td><code>30</code></td><td>Time in seconds, after the connector initializes, to the workers start to run.</td></tr>
+<tr><td><code>EDC_LOGGINGHOUSE_EXTENSION_WORKERS_PERIOD</code></td><td><code>10</code></td><td>Time in seconds, between each workers processing.</td></tr>
+</tbody></table>
+</div>
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
