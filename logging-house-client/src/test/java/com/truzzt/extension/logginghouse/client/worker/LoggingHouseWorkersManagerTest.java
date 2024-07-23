@@ -43,14 +43,13 @@ import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
+class LoggingHouseWorkersManagerTest extends BaseUnitTest {
 
     @Mock
     private WorkersExecutor executor;
@@ -64,6 +63,7 @@ public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
     private Hostname hostname;
 
     @BeforeEach
+    @Override
     public void setup() {
         super.setup();
         hostname = buildHostnameMock();
@@ -82,7 +82,7 @@ public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
     }
 
     @Test
-    public void processPending_successSingleMessage() {
+    void processPending_successSingleMessage() {
 
         var worker = buildMessageWorkerMock();
         when(worker.run(any(LoggingHouseMessage.class))).thenReturn(CompletableFuture.completedFuture(true));
@@ -106,7 +106,7 @@ public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
     }
 
     @Test
-    public void processPending_successMultipleMessages() {
+    void processPending_successMultipleMessages() {
 
         var worker = buildMessageWorkerMock();
         when(worker.run(any(LoggingHouseMessage.class))).thenReturn(CompletableFuture.completedFuture(true));
@@ -134,7 +134,7 @@ public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
     }
 
     @Test
-    public void processPending_emptyPendingMessages() {
+    void processPending_emptyPendingMessages() {
 
         var worker = buildMessageWorkerMock();
         when(worker.run(any(LoggingHouseMessage.class))).thenReturn(CompletableFuture.completedFuture(true));
@@ -155,7 +155,7 @@ public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
     }
 
     @Test
-    public void processPending_workerProcessingError() {
+    void processPending_workerProcessingError() {
 
         var exception = new EdcException("Error");
 
@@ -179,12 +179,12 @@ public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
         verify(store, times(1)).listPending();
         verify(worker, times(1)).run(message);
         verify(monitor, times(1)).severe(
-                eq(format("LoggingHouseWorkersManager: Unexpected exception happened during in worker %s", worker.getId())),
-                eq(exception));
+                format("LoggingHouseWorkersManager: Unexpected exception happened during in worker %s", worker.getId()),
+                exception);
     }
 
     @Test
-    public void nextAvailableWorker_success() {
+    void nextAvailableWorker_success() {
 
         var worker = buildMessageWorkerMock();
         var workers = buildQueue(List.of(worker));
@@ -198,7 +198,7 @@ public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
     }
 
     @Test
-    public void getConnectorBaseUrl_success() {
+    void getConnectorBaseUrl_success() {
 
         var worker = buildMessageWorkerMock();
         var workers = buildQueue(List.of(worker));
@@ -212,7 +212,7 @@ public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
     }
 
     @Test
-    public void getConnectorBaseUrl_error() {
+    void getConnectorBaseUrl_error() {
 
         var worker = buildMessageWorkerMock();
         var workers = buildQueue(List.of(worker));
@@ -226,7 +226,7 @@ public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
         assertThrows(EdcException.class, () -> manager.getConnectorBaseUrl(errorHostname));
     }
 
-    public static class LoggingHouseWorkersManagerWrapper extends LoggingHouseWorkersManager {
+    static class LoggingHouseWorkersManagerWrapper extends LoggingHouseWorkersManager {
 
         private final Queue<MessageWorker> workers;
 

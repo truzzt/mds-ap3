@@ -46,7 +46,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class MessageWorkerTest extends BaseUnitTest {
+class MessageWorkerTest extends BaseUnitTest {
 
     @Mock
     private LoggingHouseMessageStore store;
@@ -55,7 +55,7 @@ public class MessageWorkerTest extends BaseUnitTest {
     private RemoteMessageDispatcherRegistry dispatcherRegistry;
 
     @Test
-    public void process_successContractAgreement() {
+    void process_successContractAgreement() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
         var agreement = buildContractAgreement(ASSET_ID);
@@ -85,11 +85,11 @@ public class MessageWorkerTest extends BaseUnitTest {
                 .info("Received receipt successfully from LoggingHouse for message with id " + message.getEventId());
 
         verify(store, times(1))
-                .updateSent(eq(message.getId()), eq(logMessageReceipt.data()));
+                .updateSent(message.getId(), logMessageReceipt.data());
     }
 
     @Test
-    public void process_successTransferProcess() {
+    void process_successTransferProcess() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
         var transferProcess = buildInitialTransferProcess(ASSET_ID, getRandomUuid());
@@ -113,11 +113,11 @@ public class MessageWorkerTest extends BaseUnitTest {
                 .info("Received receipt successfully from LoggingHouse for message with id " + message.getEventId());
 
         verify(store, times(1))
-                .updateSent(eq(message.getId()), eq(logMessageReceipt.data()));
+                .updateSent(message.getId(), logMessageReceipt.data());
     }
 
     @Test
-    public void process_processAlreadyExists() {
+    void process_processAlreadyExists() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
         var agreement = buildContractAgreement(ASSET_ID);
@@ -147,11 +147,11 @@ public class MessageWorkerTest extends BaseUnitTest {
                 .info("Received receipt successfully from LoggingHouse for message with id " + message.getEventId());
 
         verify(store, times(1))
-                .updateSent(eq(message.getId()), eq(logMessageReceipt.data()));
+                .updateSent(message.getId(), logMessageReceipt.data());
     }
 
     @Test
-    public void process_failureSendingLogMessage() {
+    void process_failureSendingLogMessage() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
         var agreement = buildContractAgreement(ASSET_ID);
@@ -180,7 +180,7 @@ public class MessageWorkerTest extends BaseUnitTest {
     }
 
     @Test
-    public void createProcess_success() {
+    void createProcess_success() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
         var agreement = buildContractAgreement(ASSET_ID);
@@ -201,7 +201,7 @@ public class MessageWorkerTest extends BaseUnitTest {
     }
 
     @Test
-    public void createProcess_error() {
+    void createProcess_error() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
         var agreement = buildContractAgreement(ASSET_ID);
@@ -221,7 +221,7 @@ public class MessageWorkerTest extends BaseUnitTest {
     }
 
     @Test
-    public void logMessage_success() {
+    void logMessage_success() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
         var agreement = buildContractAgreement(ASSET_ID);
@@ -242,7 +242,7 @@ public class MessageWorkerTest extends BaseUnitTest {
     }
 
     @Test
-    public void logMessage_error() {
+    void logMessage_error() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
         var agreement = buildContractAgreement(ASSET_ID);
