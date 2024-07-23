@@ -133,6 +133,33 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         return NAME;
     }
 
+    public LoggingHouseClientExtension() {
+    }
+
+    LoggingHouseClientExtension(Hostname hostname,
+                                TypeManager typeManager,
+                                EventRouter eventRouter,
+                                IdentityService identityService,
+                                RemoteMessageDispatcherRegistry dispatcherRegistry,
+                                DataSourceRegistry dataSourceRegistry,
+                                TransactionContext transactionContext,
+                                QueryExecutor queryExecutor,
+                                ContractNegotiationStore contractNegotiationStore,
+                                TransferProcessStore transferProcessStore,
+                                AssetIndex assetIndex) {
+        this.hostname = hostname;
+        this.typeManager = typeManager;
+        this.eventRouter = eventRouter;
+        this.identityService = identityService;
+        this.dispatcherRegistry = dispatcherRegistry;
+        this.dataSourceRegistry = dataSourceRegistry;
+        this.transactionContext = transactionContext;
+        this.queryExecutor = queryExecutor;
+        this.contractNegotiationStore = contractNegotiationStore;
+        this.transferProcessStore = transferProcessStore;
+        this.assetIndex = assetIndex;
+    }
+
     @Override
     public void initialize(ServiceExtensionContext context) {
         monitor = context.getMonitor();

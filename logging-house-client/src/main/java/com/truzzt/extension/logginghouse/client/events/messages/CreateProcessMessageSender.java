@@ -14,22 +14,23 @@
 
 package com.truzzt.extension.logginghouse.client.events.messages;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.truzzt.extension.logginghouse.client.multipart.ids.jsonld.JsonLd;
 import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.CalendarUtil;
 import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.IdsConstants;
 import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.IdsMultipartParts;
 import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.MultipartResponse;
 import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.MultipartSenderDelegate;
-import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.ResponseUtil;
 import de.fraunhofer.iais.eis.DynamicAttributeToken;
 import de.fraunhofer.iais.eis.Message;
 import de.fraunhofer.iais.eis.MessageProcessedNotificationMessageImpl;
 import de.fraunhofer.iais.eis.RequestMessageBuilder;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.List;
 
-public class CreateProcessMessageSender implements MultipartSenderDelegate<CreateProcessMessage, String> {
+public class CreateProcessMessageSender implements MultipartSenderDelegate<CreateProcessMessage, CreateProcessReceipt> {
 
     public CreateProcessMessageSender() {
     }
@@ -53,8 +54,8 @@ public class CreateProcessMessageSender implements MultipartSenderDelegate<Creat
     }
 
     @Override
-    public MultipartResponse<String> getResponseContent(IdsMultipartParts parts) throws Exception {
-        return ResponseUtil.parseMultipartStringResponse(parts, JsonLd.getObjectMapper());
+    public MultipartResponse<CreateProcessReceipt> getResponseContent(IdsMultipartParts parts) throws Exception {
+        return parseCreateProcessReceiptResponse(parts, JsonLd.getObjectMapper());
     }
 
     @Override
@@ -65,5 +66,16 @@ public class CreateProcessMessageSender implements MultipartSenderDelegate<Creat
     @Override
     public Class<CreateProcessMessage> getMessageType() {
         return CreateProcessMessage.class;
+    }
+
+    private MultipartResponse<CreateProcessReceipt> parseCreateProcessReceiptResponse(IdsMultipartParts parts, ObjectMapper objectMapper) throws IOException {
+        var header = objectMapper.readValue(parts.getHeader(), Message.class);
+
+        CreateProcessReceipt payload = null;
+        if (parts.getPayload() != null) {
+            payload = objectMapper.readValue(parts.getPayload(), CreateProcessReceipt.class);
+        }
+
+        return new MultipartResponse<>(header, payload);
     }
 }

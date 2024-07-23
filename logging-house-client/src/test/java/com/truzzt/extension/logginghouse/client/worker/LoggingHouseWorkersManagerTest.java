@@ -1,42 +1,59 @@
+/*
+ *  Copyright (c) 2024 truzzt GmbH
+ *
+ *  This program and the accompanying materials are made available under the
+ *  terms of the Apache License, Version 2.0 which is available at
+ *  https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  SPDX-License-Identifier: Apache-2.0
+ *
+ *  Contributors:
+ *       truzzt GmbH - Initial implementation
+ *
+ */
+
 package com.truzzt.extension.logginghouse.client.worker;
 
-import com.truzzt.extension.logginghouse.client.events.messages.LogMessageReceipt;
 import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessage;
-import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationFinalized;
+import com.truzzt.extension.logginghouse.client.tests.BaseUnitTest;
 import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
-import org.eclipse.edc.policy.model.Policy;
-import org.eclipse.edc.protocol.dsp.spi.types.HttpMessageProtocol;
+import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.message.RemoteMessageDispatcherRegistry;
 import org.eclipse.edc.spi.monitor.Monitor;
-import org.eclipse.edc.spi.response.StatusResult;
 import org.eclipse.edc.spi.system.Hostname;
-import org.eclipse.edc.spi.types.domain.message.RemoteMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
-import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.UUID;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 
+import static com.truzzt.extension.logginghouse.client.tests.MockBuilder.buildHostnameMock;
+import static com.truzzt.extension.logginghouse.client.tests.MockBuilder.buildMessageWorkerMock;
+import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildCContractAgreement;
+import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildLoggingHouseMessage;
+import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_ID;
+import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.buildQueue;
+import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getLoggingHouseURL;
+import static java.lang.String.format;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-public class LoggingHouseWorkersManagerTest {
+public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
 
     @Mock
     private WorkersExecutor executor;
-
-    @Mock
-    private Monitor monitor;
 
     @Mock
     private LoggingHouseMessageStore store;
@@ -44,86 +61,194 @@ public class LoggingHouseWorkersManagerTest {
     @Mock
     private RemoteMessageDispatcherRegistry dispatcherRegistry;
 
-    @Mock
     private Hostname hostname;
 
     @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
-
-        doReturn("localhost").when(hostname).get();
+    public void setup() {
+        super.setup();
+        hostname = buildHostnameMock();
     }
 
-    @Test
-    public void processPending_success_singleMessage() throws MalformedURLException {
-
-        LoggingHouseWorkersManager manager = new LoggingHouseWorkersManager(executor,
+    private LoggingHouseWorkersManagerWrapper buildWorkersManager(int maxWorkers, Queue<MessageWorker> workers) {
+        return new LoggingHouseWorkersManagerWrapper(executor,
                 monitor,
-                1,
+                maxWorkers,
                 store,
                 dispatcherRegistry,
                 hostname,
-                new URL("http://localhost:7171/api")
+                getLoggingHouseURL(),
+                workers
         );
+    }
 
-        var policy = Policy.Builder.newInstance().build();
+    @Test
+    public void processPending_successSingleMessage() {
 
-        var agreement = ContractAgreement.Builder.newInstance()
-                .id(UUID.randomUUID().toString())
-                .providerId("provider")
-                .consumerId("consumer")
-                .contractSigningDate(ZonedDateTime.now().getNano())
-                .assetId(UUID.randomUUID().toString())
-                .policy(policy)
-            .build();
+        var worker = buildMessageWorkerMock();
+        when(worker.run(any(LoggingHouseMessage.class))).thenReturn(CompletableFuture.completedFuture(true));
+        var workers = buildQueue(List.of(worker));
 
-        var event = ContractNegotiationFinalized.Builder.newInstance()
-                .contractAgreement(agreement)
-                .contractNegotiationId(UUID.randomUUID().toString())
-                .counterPartyAddress("http://localhost:8282/protocol")
-                .counterPartyId("provider")
-                .protocol(HttpMessageProtocol.DATASPACE_PROTOCOL_HTTP)
-            .build();
+        var manager = buildWorkersManager(workers.size(), workers);
 
-        var message = LoggingHouseMessage.Builder.newInstance()
-                .id(1L)
-                .eventType(ContractNegotiationFinalized.class)
-                .eventId(UUID.randomUUID().toString())
-                .eventToLog(event)
-                .createProcess(true)
-                .processId(UUID.randomUUID().toString())
-                .consumerId("consumer")
-                .providerId("provider")
-                .createdAt(ZonedDateTime.now())
-        .build();
+        var agreement = buildCContractAgreement(ASSET_ID);
+        var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
 
-        doReturn( List.of(message))
-                .when(store)
-                .listPending();
+        // Mock methods calls
+        when(store.listPending()).thenReturn(List.of(message));
 
-        // Mock create process call
-        doReturn(CompletableFuture.completedFuture(true))
-                .when(dispatcherRegistry)
-                .dispatch(eq(Object.class), any(RemoteMessage.class));
-
-        // Mock log message call
-        var logMessageReceipt = new LogMessageReceipt("{}");
-        doReturn(CompletableFuture.completedFuture(StatusResult.success(logMessageReceipt)))
-                .when(dispatcherRegistry)
-                .dispatch(eq(LogMessageReceipt.class), any(RemoteMessage.class));
-
+        // Start the test
         manager.processPending();
 
         // Verify methods calls
-        verify(store, times(1))
-                .listPending();
+        verify(store, times(1)).listPending();
+        verify(worker, times(1)).run(message);
+        verify(monitor, times(1)).info(format("LoggingHouseWorkersManager: Worker [%s] is done", worker.getId()));
+    }
 
-        verify(dispatcherRegistry, times(1))
-                .dispatch(eq(Object.class), any(RemoteMessage.class));
-        verify(dispatcherRegistry, times(1))
-                .dispatch(eq(LogMessageReceipt.class), any(RemoteMessage.class));
+    @Test
+    public void processPending_successMultipleMessages() {
 
-        verify(store, times(1))
-                .updateSent(eq(message.getId()), eq(logMessageReceipt.data()));
+        var worker = buildMessageWorkerMock();
+        when(worker.run(any(LoggingHouseMessage.class))).thenReturn(CompletableFuture.completedFuture(true));
+        var workers = buildQueue(List.of(worker));
+
+        var manager = buildWorkersManager(workers.size(), workers);
+
+        var agreement1 = buildCContractAgreement(ASSET_ID);
+        var message1 = buildLoggingHouseMessage(ContractAgreement.class, agreement1, true);
+
+        var agreement2 = buildCContractAgreement(ASSET_ID);
+        var message2 = buildLoggingHouseMessage(ContractAgreement.class, agreement2, true);
+
+        // Mock methods calls
+        when(store.listPending()).thenReturn(List.of(message1, message2));
+
+        // Start the test
+        manager.processPending();
+
+        // Verify methods calls
+        verify(store, times(1)).listPending();
+        verify(worker, times(1)).run(message1);
+        verify(worker, times(1)).run(message2);
+        verify(monitor, times(2)).info(format("LoggingHouseWorkersManager: Worker [%s] is done", worker.getId()));
+    }
+
+    @Test
+    public void processPending_emptyPendingMessages() {
+
+        var worker = buildMessageWorkerMock();
+        when(worker.run(any(LoggingHouseMessage.class))).thenReturn(CompletableFuture.completedFuture(true));
+        var workers = buildQueue(List.of(worker));
+
+        var manager = buildWorkersManager(workers.size(), workers);
+
+        // Mock methods calls
+        when(store.listPending()).thenReturn(List.of());
+
+        // Start the test
+        manager.processPending();
+
+        // Verify methods calls
+        verify(store, times(1)).listPending();
+        verify(monitor, times(1)).debug("No Messages to send, aborting execution");
+        verify(worker, never()).run(any(LoggingHouseMessage.class));
+    }
+
+    @Test
+    public void processPending_workerProcessingError() {
+
+        var exception = new EdcException("Error");
+
+        var worker = buildMessageWorkerMock();
+        when(worker.run(any(LoggingHouseMessage.class)))
+                .thenReturn(CompletableFuture.failedFuture(exception));
+        var workers = buildQueue(List.of(worker));
+
+        var manager = buildWorkersManager(workers.size(), workers);
+
+        var agreement = buildCContractAgreement(ASSET_ID);
+        var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
+
+        // Mock methods calls
+        when(store.listPending()).thenReturn(List.of(message));
+
+        // Start the test
+        manager.processPending();
+
+        // Verify methods calls
+        verify(store, times(1)).listPending();
+        verify(worker, times(1)).run(message);
+        verify(monitor, times(1)).severe(
+                eq(format("LoggingHouseWorkersManager: Unexpected exception happened during in worker %s", worker.getId())),
+                eq(exception));
+    }
+
+    @Test
+    public void nextAvailableWorker_success() {
+
+        var worker = buildMessageWorkerMock();
+        var workers = buildQueue(List.of(worker));
+        var manager = buildWorkersManager(workers.size(), workers);
+
+        // Start the test
+        var availableWorker = manager.nextAvailableWorker(workers);
+
+        // Assert test results
+        assertEquals(availableWorker.getId(), worker.getId());
+    }
+
+    @Test
+    public void getConnectorBaseUrl_success() {
+
+        var worker = buildMessageWorkerMock();
+        var workers = buildQueue(List.of(worker));
+        var manager = buildWorkersManager(workers.size(), workers);
+
+        // Start the test
+        var connectorBaseUrl = manager.getConnectorBaseUrl(hostname);
+
+        // Assert test results
+        assertEquals("https://localhost/", connectorBaseUrl.toString());
+    }
+
+    @Test
+    public void getConnectorBaseUrl_error() {
+
+        var worker = buildMessageWorkerMock();
+        var workers = buildQueue(List.of(worker));
+        var manager = buildWorkersManager(workers.size(), workers);
+
+        // Mock methods calls
+        var errorHostname = mock(Hostname.class);
+        when(errorHostname.get()).thenReturn("%$#@&");
+
+        // Start the test
+        assertThrows(EdcException.class, () -> manager.getConnectorBaseUrl(errorHostname));
+    }
+
+    public static class LoggingHouseWorkersManagerWrapper extends LoggingHouseWorkersManager {
+
+        private final Queue<MessageWorker> workers;
+
+        public LoggingHouseWorkersManagerWrapper(WorkersExecutor executor,
+                                                 Monitor monitor,
+                                                 int maxWorkers,
+                                                 LoggingHouseMessageStore store,
+                                                 RemoteMessageDispatcherRegistry dispatcherRegistry,
+                                                 Hostname hostname,
+                                                 URL loggingHouseUrl,
+                                                 Queue<MessageWorker> workers) {
+            super(executor, monitor, maxWorkers, store, dispatcherRegistry, hostname, loggingHouseUrl);
+            this.workers = workers;
+        }
+
+        @Override
+        MessageWorker buildMessageWorker(Monitor monitor,
+                                         RemoteMessageDispatcherRegistry dispatcherRegistry,
+                                         URI connectorBaseUrl,
+                                         URL loggingHouseUrl,
+                                         LoggingHouseMessageStore store) {
+            return workers.peek();
+        }
     }
 }

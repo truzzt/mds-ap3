@@ -134,7 +134,7 @@ public class LogMessageSender implements MultipartSenderDelegate<LogMessage, Log
         return jo.toString();
     }
 
-    public static MultipartResponse<LogMessageReceipt> parseLogMessageReceiptResponse(IdsMultipartParts parts, ObjectMapper objectMapper) throws IOException {
+    private MultipartResponse<LogMessageReceipt> parseLogMessageReceiptResponse(IdsMultipartParts parts, ObjectMapper objectMapper) throws IOException {
         var header = objectMapper.readValue(parts.getHeader(), Message.class);
 
         LogMessageReceipt payload = null;

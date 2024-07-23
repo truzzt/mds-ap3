@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022 Microsoft Corporation
+ *  Copyright (c) 2024 truzzt GmbH
  *
  *  This program and the accompanying materials are made available under the
  *  terms of the Apache License, Version 2.0 which is available at
@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       Microsoft Corporation - initial API and implementation
+ *       truzzt GmbH - Initial implementation
  *
  */
 
@@ -20,8 +20,6 @@ import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.message.RemoteMessageDispatcherRegistry;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.system.Hostname;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -61,16 +59,13 @@ public class LoggingHouseWorkersManager {
     }
 
     public void execute() {
-        executor.run(() -> {
-            processPending();
-        });
-
+        executor.run(this::processPending);
     }
 
     void processPending() {
         List<LoggingHouseMessage> messages = store.listPending();
         if (messages.isEmpty()) {
-            monitor.warning("No Messages to send, aborting execution");
+            monitor.debug("No Messages to send, aborting execution");
             return;
         }
         monitor.debug(log("Loaded " + messages.size() + " not sent messages from store"));
@@ -102,7 +97,6 @@ public class LoggingHouseWorkersManager {
         }
     }
 
-    @Nullable
     MessageWorker nextAvailableWorker(ArrayBlockingQueue<MessageWorker> availableWorkers) {
         MessageWorker worker = null;
         try {
@@ -114,19 +108,26 @@ public class LoggingHouseWorkersManager {
         return worker;
     }
 
-    @NotNull
     private ArrayBlockingQueue<MessageWorker> createWorkers(int numWorkers) {
 
         return new ArrayBlockingQueue<>(numWorkers, true, IntStream.range(0, numWorkers)
-                .mapToObj(i -> new MessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl, store))
+                .mapToObj(i -> buildMessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl, store))
                 .collect(Collectors.toList()));
+    }
+
+    MessageWorker buildMessageWorker(Monitor monitor,
+                                     RemoteMessageDispatcherRegistry dispatcherRegistry,
+                                     URI connectorBaseUrl,
+                                     URL loggingHouseUrl,
+                                     LoggingHouseMessageStore store) {
+        return new MessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl, store);
     }
 
     private String log(String input) {
         return "LoggingHouseWorkersManager: " + input;
     }
 
-    private URI getConnectorBaseUrl(Hostname hostname) {
+    URI getConnectorBaseUrl(Hostname hostname) {
         try {
             return new URI(String.format("https://%s/", hostname.get()));
         } catch (URISyntaxException e) {
