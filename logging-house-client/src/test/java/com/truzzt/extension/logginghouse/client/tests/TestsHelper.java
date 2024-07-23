@@ -30,9 +30,9 @@ import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.LOGG
 
 public class TestsHelper {
 
-    private static final Random longRandom = new Random();
+    private static final Random LONG_RANDOM = new Random();
 
-    public static URI getConnectorBaseURL() {
+    public static URI getConnectorBaseUrl() {
         try {
             return new URI(CONNECTOR_BASE_URL);
         } catch (URISyntaxException e) {
@@ -40,7 +40,7 @@ public class TestsHelper {
         }
     }
 
-    public static URL getLoggingHouseURL() {
+    public static URL getLoggingHouseUrl() {
         try {
             return new URL(LOGGING_HOUSE_URL);
         } catch (MalformedURLException e) {
@@ -49,10 +49,10 @@ public class TestsHelper {
     }
 
     public static long getRandomLong() {
-        return longRandom.nextLong();
+        return LONG_RANDOM.nextLong();
     }
 
-    public static String getRandomUUID() {
+    public static String getRandomUuid() {
         return UUID.randomUUID().toString();
     }
 

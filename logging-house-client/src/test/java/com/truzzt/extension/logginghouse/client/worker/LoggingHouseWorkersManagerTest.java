@@ -34,11 +34,11 @@ import java.util.concurrent.CompletableFuture;
 
 import static com.truzzt.extension.logginghouse.client.tests.MockBuilder.buildHostnameMock;
 import static com.truzzt.extension.logginghouse.client.tests.MockBuilder.buildMessageWorkerMock;
-import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildCContractAgreement;
+import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildContractAgreement;
 import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildLoggingHouseMessage;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_ID;
 import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.buildQueue;
-import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getLoggingHouseURL;
+import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getLoggingHouseUrl;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -76,7 +76,7 @@ public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
                 store,
                 dispatcherRegistry,
                 hostname,
-                getLoggingHouseURL(),
+                getLoggingHouseUrl(),
                 workers
         );
     }
@@ -90,7 +90,7 @@ public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
 
         var manager = buildWorkersManager(workers.size(), workers);
 
-        var agreement = buildCContractAgreement(ASSET_ID);
+        var agreement = buildContractAgreement(ASSET_ID);
         var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
 
         // Mock methods calls
@@ -114,10 +114,10 @@ public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
 
         var manager = buildWorkersManager(workers.size(), workers);
 
-        var agreement1 = buildCContractAgreement(ASSET_ID);
+        var agreement1 = buildContractAgreement(ASSET_ID);
         var message1 = buildLoggingHouseMessage(ContractAgreement.class, agreement1, true);
 
-        var agreement2 = buildCContractAgreement(ASSET_ID);
+        var agreement2 = buildContractAgreement(ASSET_ID);
         var message2 = buildLoggingHouseMessage(ContractAgreement.class, agreement2, true);
 
         // Mock methods calls
@@ -166,7 +166,7 @@ public class LoggingHouseWorkersManagerTest extends BaseUnitTest {
 
         var manager = buildWorkersManager(workers.size(), workers);
 
-        var agreement = buildCContractAgreement(ASSET_ID);
+        var agreement = buildContractAgreement(ASSET_ID);
         var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
 
         // Mock methods calls

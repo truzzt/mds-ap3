@@ -29,14 +29,14 @@ import org.mockito.Mock;
 
 import java.util.concurrent.CompletableFuture;
 
-import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildCContractAgreement;
+import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildContractAgreement;
 import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildInitialTransferProcess;
 import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildLoggingHouseMessage;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_ID;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.LOG_MESSAGE_RESPONSE_DATA;
-import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getConnectorBaseURL;
-import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getLoggingHouseURL;
-import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getRandomUUID;
+import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getConnectorBaseUrl;
+import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getLoggingHouseUrl;
+import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getRandomUuid;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -56,9 +56,9 @@ public class MessageWorkerTest extends BaseUnitTest {
 
     @Test
     public void process_successContractAgreement() {
-        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseURL(), getLoggingHouseURL(), store);
+        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildCContractAgreement(ASSET_ID);
+        var agreement = buildContractAgreement(ASSET_ID);
         var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
 
         // Mock methods calls
@@ -90,9 +90,9 @@ public class MessageWorkerTest extends BaseUnitTest {
 
     @Test
     public void process_successTransferProcess() {
-        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseURL(), getLoggingHouseURL(), store);
+        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var transferProcess = buildInitialTransferProcess(ASSET_ID, getRandomUUID());
+        var transferProcess = buildInitialTransferProcess(ASSET_ID, getRandomUuid());
         var message = buildLoggingHouseMessage(TransferProcess.class, transferProcess, false);
 
         // Mock methods calls
@@ -118,9 +118,9 @@ public class MessageWorkerTest extends BaseUnitTest {
 
     @Test
     public void process_processAlreadyExists() {
-        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseURL(), getLoggingHouseURL(), store);
+        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildCContractAgreement(ASSET_ID);
+        var agreement = buildContractAgreement(ASSET_ID);
         var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
 
         // Mock methods calls
@@ -152,9 +152,9 @@ public class MessageWorkerTest extends BaseUnitTest {
 
     @Test
     public void process_failureSendingLogMessage() {
-        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseURL(), getLoggingHouseURL(), store);
+        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildCContractAgreement(ASSET_ID);
+        var agreement = buildContractAgreement(ASSET_ID);
         var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
 
         // Mock methods calls
@@ -181,9 +181,9 @@ public class MessageWorkerTest extends BaseUnitTest {
 
     @Test
     public void createProcess_success() {
-        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseURL(), getLoggingHouseURL(), store);
+        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildCContractAgreement(ASSET_ID);
+        var agreement = buildContractAgreement(ASSET_ID);
         var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
 
         // Mock methods calls
@@ -192,7 +192,7 @@ public class MessageWorkerTest extends BaseUnitTest {
                 .thenReturn(CompletableFuture.completedFuture(StatusResult.success(createProcessReceipt)));
 
         // Start the test
-        var result = worker.createProcess(message, getLoggingHouseURL()).join();
+        var result = worker.createProcess(message, getLoggingHouseUrl()).join();
         result.onSuccess(msg -> assertEquals(createProcessReceipt.pid(), msg.pid()));
 
         // Verify methods calls
@@ -202,9 +202,9 @@ public class MessageWorkerTest extends BaseUnitTest {
 
     @Test
     public void createProcess_error() {
-        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseURL(), getLoggingHouseURL(), store);
+        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildCContractAgreement(ASSET_ID);
+        var agreement = buildContractAgreement(ASSET_ID);
         var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
 
         // Mock methods calls
@@ -213,7 +213,7 @@ public class MessageWorkerTest extends BaseUnitTest {
                 .thenThrow(createProcessException);
 
         // Start the test
-        assertThrows(EdcException.class, () -> worker.createProcess(message, getLoggingHouseURL()).join());
+        assertThrows(EdcException.class, () -> worker.createProcess(message, getLoggingHouseUrl()).join());
 
         // Verify methods calls
         verify(dispatcherRegistry, times(1))
@@ -222,9 +222,9 @@ public class MessageWorkerTest extends BaseUnitTest {
 
     @Test
     public void logMessage_success() {
-        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseURL(), getLoggingHouseURL(), store);
+        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildCContractAgreement(ASSET_ID);
+        var agreement = buildContractAgreement(ASSET_ID);
         var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
 
         // Mock methods calls
@@ -233,7 +233,7 @@ public class MessageWorkerTest extends BaseUnitTest {
                 .thenReturn(CompletableFuture.completedFuture(StatusResult.success(logMessageReceipt)));
 
         // Start the test
-        var result = worker.logMessage(message, getLoggingHouseURL()).join();
+        var result = worker.logMessage(message, getLoggingHouseUrl()).join();
         result.onSuccess(msg -> assertEquals(logMessageReceipt.data(), msg.data()));
 
         // Verify methods calls
@@ -243,9 +243,9 @@ public class MessageWorkerTest extends BaseUnitTest {
 
     @Test
     public void logMessage_error() {
-        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseURL(), getLoggingHouseURL(), store);
+        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildCContractAgreement(ASSET_ID);
+        var agreement = buildContractAgreement(ASSET_ID);
         var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
 
         // Mock methods calls
@@ -254,7 +254,7 @@ public class MessageWorkerTest extends BaseUnitTest {
                 .thenThrow(logMessageException);
 
         // Start the test
-        assertThrows(EdcException.class, () -> worker.logMessage(message, getLoggingHouseURL()).join());
+        assertThrows(EdcException.class, () -> worker.logMessage(message, getLoggingHouseUrl()).join());
 
         // Verify methods calls
         verify(dispatcherRegistry, times(1))

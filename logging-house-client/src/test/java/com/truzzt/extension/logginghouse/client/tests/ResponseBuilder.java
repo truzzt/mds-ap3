@@ -32,7 +32,7 @@ import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.CONS
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.COUNTER_PARTY_ADDRESS;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.PROVIDER_PARTICIPANT_ID;
 import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getRandomLong;
-import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getRandomUUID;
+import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getRandomUuid;
 
 public class ResponseBuilder {
 
@@ -40,10 +40,10 @@ public class ResponseBuilder {
         return LoggingHouseMessage.Builder.newInstance()
                 .id(getRandomLong())
                 .eventType(eventType)
-                .eventId(getRandomUUID())
+                .eventId(getRandomUuid())
                 .eventToLog(eventToLog)
                 .createProcess(createProcess)
-                .processId(getRandomUUID())
+                .processId(getRandomUuid())
                 .consumerId(CONSUMER_PARTICIPANT_ID)
                 .providerId(PROVIDER_PARTICIPANT_ID)
                 .createdAt(ZonedDateTime.now());
@@ -54,7 +54,7 @@ public class ResponseBuilder {
                 .build();
     }
 
-    public static ContractAgreement buildCContractAgreement(String assetId) {
+    public static ContractAgreement buildContractAgreement(String assetId) {
 
         var policy = Policy.Builder.newInstance()
                 .target(assetId)
