@@ -230,7 +230,7 @@ class LoggingHouseWorkersManagerTest extends BaseUnitTest {
 
         private final Queue<MessageWorker> workers;
 
-        public LoggingHouseWorkersManagerWrapper(WorkersExecutor executor,
+        LoggingHouseWorkersManagerWrapper(WorkersExecutor executor,
                                                  Monitor monitor,
                                                  int maxWorkers,
                                                  LoggingHouseMessageStore store,
