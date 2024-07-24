@@ -111,6 +111,9 @@ public class LoggingHouseWorkersManager {
             // Wait for completion before processing next item
             try {
                 taskFuture.get();
+            } catch (InterruptedException e) {
+                monitor.severe(log("Interrupted while waiting for worker to finish"), e);
+                Thread.currentThread().interrupt();
             } catch (Exception e) {
                 monitor.severe(log("Unexpected exception happened during in worker"), e);
             }
@@ -124,7 +127,8 @@ public class LoggingHouseWorkersManager {
             monitor.debug(log("Getting next available worker"));
             worker = availableWorkers.poll(1, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
-            monitor.debug("interrupted while waiting for worker to become available");
+            monitor.severe(log("Interrupted while waiting for worker to become available"), e);
+            Thread.currentThread().interrupt();
         }
         return worker;
     }

@@ -71,7 +71,7 @@ import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHO
 import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_FLYWAY_REPAIR_SETTING;
 import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_URL_SETTING;
 
-@Extension(value = LoggingHouseClientExtension.NAME)
+@Extension(value = LoggingHouseClientExtension.EXTENSION_NAME)
 @Requires(value = {
     Hostname.class,
 
@@ -90,7 +90,7 @@ import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHO
 })
 public class LoggingHouseClientExtension implements ServiceExtension {
 
-    public static final String NAME = "LoggingHouseClientExtension";
+    public static final String EXTENSION_NAME = "LoggingHouseClientExtension";
     private static final String TYPE_MANAGER_SERIALIZER_KEY = "ids-clearinghouse";
     private static final Map<String, String> CONTEXT_MAP = Map.of(
             "cat", "http://w3id.org/mds/data-categories#",
@@ -123,41 +123,17 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     @Inject
     private AssetIndex assetIndex;
 
-    public Monitor monitor;
+    private Monitor monitor;
     private boolean enabled;
     private URL loggingHouseLogUrl;
     private LoggingHouseWorkersManager workersManager;
 
     @Override
     public String name() {
-        return NAME;
+        return EXTENSION_NAME;
     }
 
     public LoggingHouseClientExtension() {
-    }
-
-    LoggingHouseClientExtension(Hostname hostname,
-                                TypeManager typeManager,
-                                EventRouter eventRouter,
-                                IdentityService identityService,
-                                RemoteMessageDispatcherRegistry dispatcherRegistry,
-                                DataSourceRegistry dataSourceRegistry,
-                                TransactionContext transactionContext,
-                                QueryExecutor queryExecutor,
-                                ContractNegotiationStore contractNegotiationStore,
-                                TransferProcessStore transferProcessStore,
-                                AssetIndex assetIndex) {
-        this.hostname = hostname;
-        this.typeManager = typeManager;
-        this.eventRouter = eventRouter;
-        this.identityService = identityService;
-        this.dispatcherRegistry = dispatcherRegistry;
-        this.dataSourceRegistry = dataSourceRegistry;
-        this.transactionContext = transactionContext;
-        this.queryExecutor = queryExecutor;
-        this.contractNegotiationStore = contractNegotiationStore;
-        this.transferProcessStore = transferProcessStore;
-        this.assetIndex = assetIndex;
     }
 
     @Override
@@ -177,7 +153,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
 
         runFlywayMigrations(context);
 
-        registerSerializerClearingHouseMessages(context);
+        registerSerializerClearingHouseMessages();
 
         var store = initializeLoggingHouseMessageStore(typeManager);
         registerEventSubscriber(context, store);
@@ -244,7 +220,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         monitor.debug("Registered event subscriber for LoggingHouseClientExtension");
     }
 
-    private void registerSerializerClearingHouseMessages(ServiceExtensionContext context) {
+    private void registerSerializerClearingHouseMessages() {
         monitor.debug("Registering serializers for LoggingHouseClientExtension");
 
         typeManager.registerContext(TYPE_MANAGER_SERIALIZER_KEY, JsonLd.getObjectMapper());
