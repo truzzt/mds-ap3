@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024 truzzt GmbH
+ *  Copyright (c) 2022 Microsoft Corporation
  *
  *  This program and the accompanying materials are made available under the
  *  terms of the Apache License, Version 2.0 which is available at
@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       truzzt GmbH - Initial implementation
+ *       Microsoft Corporation - initial API and implementation
  *
  */
 
@@ -20,12 +20,15 @@ import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.message.RemoteMessageDispatcherRegistry;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.system.Hostname;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -55,17 +58,25 @@ public class LoggingHouseWorkersManager {
         this.store = store;
         this.dispatcherRegistry = dispatcherRegistry;
         this.loggingHouseUrl = loggingHouseUrl;
-        this.connectorBaseUrl = getConnectorBaseUrl(hostname);
+
+        try {
+            connectorBaseUrl = getConnectorBaseUrl(hostname);
+        } catch (URISyntaxException e) {
+            throw new EdcException("Could not create connectorBaseUrl. Hostname can be set using:" + hostname, e);
+        }
     }
 
     public void execute() {
-        executor.run(this::processPending);
+        executor.run(() -> {
+            processPending();
+        });
+
     }
 
-    void processPending() {
+    private void processPending() {
         List<LoggingHouseMessage> messages = store.listPending();
         if (messages.isEmpty()) {
-            monitor.debug("No Messages to send, aborting execution");
+            monitor.warning("No Messages to send, aborting execution");
             return;
         }
         monitor.debug(log("Loaded " + messages.size() + " not sent messages from store"));
@@ -84,20 +95,36 @@ public class LoggingHouseWorkersManager {
                 continue;
             }
 
-            var item = allItems.poll();
-            worker.run(item)
+            var item = allItems.peek();
+            if (item == null) {
+                monitor.warning(log("WorkItem queue empty, abort execution"));
+                break;
+            }
+
+            CompletableFuture<Boolean> taskFuture = worker.run(item)
                     .whenComplete((updateResponse, throwable) -> {
                         if (throwable != null) {
                             monitor.severe(log(format("Unexpected exception happened during in worker %s", worker.getId())), throwable);
                         } else {
                             monitor.info(log(format("Worker [%s] is done", worker.getId())));
+                            // Remove item only when processed successfully
+                            allItems.poll();
                         }
+                        // re-add worker for the next message
                         availableWorkers.add(worker);
                     });
+
+            // Wait for completion before processing next item
+            try {
+                taskFuture.get();
+            } catch (Exception e) {
+                monitor.severe(log("Unexpected exception happened during in worker"), e);
+            }
         }
     }
 
-    MessageWorker nextAvailableWorker(ArrayBlockingQueue<MessageWorker> availableWorkers) {
+    @Nullable
+    private MessageWorker nextAvailableWorker(ArrayBlockingQueue<MessageWorker> availableWorkers) {
         MessageWorker worker = null;
         try {
             monitor.debug(log("Getting next available worker"));
@@ -108,30 +135,19 @@ public class LoggingHouseWorkersManager {
         return worker;
     }
 
+    @NotNull
     private ArrayBlockingQueue<MessageWorker> createWorkers(int numWorkers) {
 
         return new ArrayBlockingQueue<>(numWorkers, true, IntStream.range(0, numWorkers)
-                .mapToObj(i -> buildMessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl, store))
+                .mapToObj(i -> new MessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl, store))
                 .collect(Collectors.toList()));
-    }
-
-    MessageWorker buildMessageWorker(Monitor monitor,
-                                     RemoteMessageDispatcherRegistry dispatcherRegistry,
-                                     URI connectorBaseUrl,
-                                     URL loggingHouseUrl,
-                                     LoggingHouseMessageStore store) {
-        return new MessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl, store);
     }
 
     private String log(String input) {
         return "LoggingHouseWorkersManager: " + input;
     }
 
-    URI getConnectorBaseUrl(Hostname hostname) {
-        try {
-            return new URI(String.format("https://%s/", hostname.get()));
-        } catch (URISyntaxException e) {
-            throw new EdcException("Could not create connectorBaseUrl. Hostname can be set using:" + hostname, e);
-        }
+    private URI getConnectorBaseUrl(Hostname hostname) throws URISyntaxException {
+        return new URI(String.format("https://%s/", hostname.get()));
     }
 }

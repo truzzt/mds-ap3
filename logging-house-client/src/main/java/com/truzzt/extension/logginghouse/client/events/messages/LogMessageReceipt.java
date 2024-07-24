@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       truzzt GmbH - Initial implementation
+ *       truzzt GmbH - initial implementation
  *
  */
 

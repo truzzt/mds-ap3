@@ -37,10 +37,11 @@ public class BaseSqlDialectStatements implements LoggingHouseEventStatements {
 
     @Override
     public String getSelectPendingStatement() {
-        return format("SELECT * FROM %s WHERE %s IS NULL ORDER BY %s",
+        return format("SELECT * FROM %s WHERE %s IS NULL ORDER BY %s asc, %s asc",
                 getLoggingHouseMessageTable(),
                 getReceiptColumn(),
-                getCreatedAtColumn());
+                getCreatedAtColumn(),
+                getIdColumn());
     }
 
     @Override

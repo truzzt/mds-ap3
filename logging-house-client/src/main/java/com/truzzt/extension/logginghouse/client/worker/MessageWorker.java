@@ -83,7 +83,6 @@ public class MessageWorker {
                     var response = createProcess(message, extendedProcessUrl).join();
                     response.onSuccess(msg -> monitor.info("Process successfully created on LoggingHouse with pid " + (msg.pid())));
                 } catch (Exception e) {
-                    // TODO: Not fail when process already exists
                     monitor.warning("CreateProcess returned error (ignore it when the process already exists): " + e.getMessage());
                     //throw new EdcException("Could not create process in LoggingHouse", e);
                 }
