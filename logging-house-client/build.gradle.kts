@@ -1,7 +1,7 @@
 plugins {
     `java-library`
     `maven-publish`
-    `jacoco`
+    jacoco
 }
 
 val edcVersion: String by project

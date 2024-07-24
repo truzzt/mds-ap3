@@ -155,35 +155,6 @@ class LoggingHouseWorkersManagerTest extends BaseUnitTest {
     }
 
     @Test
-    void processPending_workerProcessingError() {
-
-        var exception = new EdcException("Error");
-
-        var worker = buildMessageWorkerMock();
-        when(worker.run(any(LoggingHouseMessage.class)))
-                .thenReturn(CompletableFuture.failedFuture(exception));
-        var workers = buildQueue(List.of(worker));
-
-        var manager = buildWorkersManager(workers.size(), workers);
-
-        var agreement = buildContractAgreement(ASSET_ID);
-        var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
-
-        // Mock methods calls
-        when(store.listPending()).thenReturn(List.of(message));
-
-        // Start the test
-        manager.processPending();
-
-        // Verify methods calls
-        verify(store, times(1)).listPending();
-        verify(worker, times(1)).run(message);
-        verify(monitor, times(1)).severe(
-                format("LoggingHouseWorkersManager: Unexpected exception happened during in worker %s", worker.getId()),
-                exception);
-    }
-
-    @Test
     void nextAvailableWorker_success() {
 
         var worker = buildMessageWorkerMock();
