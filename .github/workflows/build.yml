@@ -27,7 +27,7 @@ jobs:
       - name: Build and Analyse
         uses: gradle/gradle-build-action@v3
         with:
-          arguments: build jacocoTestReport sonar
+          arguments: build sonar
         env:
           USERNAME: ${{ github.actor }}
           TOKEN: ${{ github.token }}
