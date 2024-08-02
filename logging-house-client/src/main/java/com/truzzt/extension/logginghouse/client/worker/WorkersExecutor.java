@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021 Microsoft Corporation
+ *  Copyright (c) 2024 truzzt GmbH
  *
  *  This program and the accompanying materials are made available under the
  *  terms of the Apache License, Version 2.0 which is available at
@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       Microsoft Corporation - Initial implementation
+ *       truzzt GmbH - Initial implementation
  *
  */
 
@@ -33,10 +33,10 @@ public class WorkersExecutor {
 
     public void run(Runnable task) {
         var ses = Executors.newSingleThreadScheduledExecutor();
-        ses.scheduleAtFixedRate(catchExceptions(task), withInitialDelay.toMillis(), schedule.toMillis(), TimeUnit.MILLISECONDS);
+        ses.scheduleAtFixedRate(execute(task), withInitialDelay.toMillis(), schedule.toMillis(), TimeUnit.MILLISECONDS);
     }
 
-    private Runnable catchExceptions(Runnable original) {
+    Runnable execute(Runnable original) {
         return () -> {
             try {
                 original.run();

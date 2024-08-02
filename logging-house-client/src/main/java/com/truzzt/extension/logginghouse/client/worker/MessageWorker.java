@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022 Microsoft Corporation
+ *  Copyright (c) 2024 truzzt GmbH
  *
  *  This program and the accompanying materials are made available under the
  *  terms of the Apache License, Version 2.0 which is available at
@@ -8,13 +8,14 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       Microsoft Corporation - initial API and implementation
+ *       truzzt GmbH - Initial implementation
  *
  */
 
 package com.truzzt.extension.logginghouse.client.worker;
 
 import com.truzzt.extension.logginghouse.client.events.messages.CreateProcessMessage;
+import com.truzzt.extension.logginghouse.client.events.messages.CreateProcessReceipt;
 import com.truzzt.extension.logginghouse.client.events.messages.LogMessage;
 import com.truzzt.extension.logginghouse.client.events.messages.LogMessageReceipt;
 import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageStore;
@@ -40,7 +41,10 @@ public class MessageWorker {
     private final LoggingHouseMessageStore store;
     private final String workerId;
 
-    public MessageWorker(Monitor monitor, RemoteMessageDispatcherRegistry dispatcherRegistry, URI connectorBaseUrl, URL loggingHouseUrl,
+    public MessageWorker(Monitor monitor,
+                         RemoteMessageDispatcherRegistry dispatcherRegistry,
+                         URI connectorBaseUrl,
+                         URL loggingHouseUrl,
                          LoggingHouseMessageStore store) {
         this.monitor = monitor;
         this.dispatcherRegistry = dispatcherRegistry;
@@ -76,7 +80,8 @@ public class MessageWorker {
             if (message.getCreateProcess()) {
                 var extendedProcessUrl = new URL(loggingHouseUrl + "/process/" + pid);
                 try {
-                    createProcess(message, extendedProcessUrl).join();
+                    var response = createProcess(message, extendedProcessUrl).join();
+                    response.onSuccess(msg -> monitor.info("Process successfully created on LoggingHouse with pid " + (msg.pid())));
                 } catch (Exception e) {
                     monitor.warning("CreateProcess returned error (ignore it when the process already exists): " + e.getMessage());
                     //throw new EdcException("Could not create process in LoggingHouse", e);
@@ -99,22 +104,22 @@ public class MessageWorker {
         }
     }
 
-    public CompletableFuture<StatusResult<Object>> createProcess(LoggingHouseMessage message, URL loggingHouseUrl) {
+    CompletableFuture<StatusResult<CreateProcessReceipt>> createProcess(LoggingHouseMessage message, URL endpointUrl) {
 
         List<String> processOwners = new ArrayList<>();
         processOwners.add(message.getConsumerId());
         processOwners.add(message.getProviderId());
 
         monitor.info("Creating process in LoggingHouse with id: " + message.getProcessId());
-        var logMessage = new CreateProcessMessage(loggingHouseUrl, connectorBaseUrl, message.getProcessId(), processOwners);
+        var logMessage = new CreateProcessMessage(endpointUrl, connectorBaseUrl, message.getProcessId(), processOwners);
 
-        return dispatcherRegistry.dispatch(Object.class, logMessage);
+        return dispatcherRegistry.dispatch(CreateProcessReceipt.class, logMessage);
     }
 
-    public CompletableFuture<StatusResult<LogMessageReceipt>> logMessage(LoggingHouseMessage message, URL clearingHouseLogUrl) {
+    CompletableFuture<StatusResult<LogMessageReceipt>> logMessage(LoggingHouseMessage message, URL endpointUrl) {
 
         monitor.info("Logging message to LoggingHouse with type " + message.getEventType() + " and id " + message.getEventId());
-        var logMessage = new LogMessage(clearingHouseLogUrl, connectorBaseUrl, message.getEventToLog());
+        var logMessage = new LogMessage(endpointUrl, connectorBaseUrl, message.getEventToLog());
 
         return dispatcherRegistry.dispatch(LogMessageReceipt.class, logMessage);
     }

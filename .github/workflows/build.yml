@@ -1,4 +1,4 @@
-name: Build and Analyse
+name: Build and Test
 on:
   pull_request:
     branches:
@@ -27,7 +27,7 @@ jobs:
       - name: Build and Analyse
         uses: gradle/gradle-build-action@v3
         with:
-          arguments: build sonar
+          arguments: build jacocoTestReport sonar
         env:
           USERNAME: ${{ github.actor }}
           TOKEN: ${{ github.token }}

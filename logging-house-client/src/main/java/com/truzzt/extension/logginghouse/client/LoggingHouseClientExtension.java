@@ -71,7 +71,7 @@ import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHO
 import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_FLYWAY_REPAIR_SETTING;
 import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_URL_SETTING;
 
-@Extension(value = LoggingHouseClientExtension.NAME)
+@Extension(value = LoggingHouseClientExtension.EXTENSION_NAME)
 @Requires(value = {
     Hostname.class,
 
@@ -90,7 +90,7 @@ import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHO
 })
 public class LoggingHouseClientExtension implements ServiceExtension {
 
-    public static final String NAME = "LoggingHouseClientExtension";
+    public static final String EXTENSION_NAME = "LoggingHouseClientExtension";
     private static final String TYPE_MANAGER_SERIALIZER_KEY = "ids-clearinghouse";
     private static final Map<String, String> CONTEXT_MAP = Map.of(
             "cat", "http://w3id.org/mds/data-categories#",
@@ -123,14 +123,17 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     @Inject
     private AssetIndex assetIndex;
 
-    public Monitor monitor;
+    private Monitor monitor;
     private boolean enabled;
     private URL loggingHouseLogUrl;
     private LoggingHouseWorkersManager workersManager;
 
     @Override
     public String name() {
-        return NAME;
+        return EXTENSION_NAME;
+    }
+
+    public LoggingHouseClientExtension() {
     }
 
     @Override
@@ -150,7 +153,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
 
         runFlywayMigrations(context);
 
-        registerSerializerClearingHouseMessages(context);
+        registerSerializerClearingHouseMessages();
 
         var store = initializeLoggingHouseMessageStore(typeManager);
         registerEventSubscriber(context, store);
@@ -217,7 +220,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         monitor.debug("Registered event subscriber for LoggingHouseClientExtension");
     }
 
-    private void registerSerializerClearingHouseMessages(ServiceExtensionContext context) {
+    private void registerSerializerClearingHouseMessages() {
         monitor.debug("Registering serializers for LoggingHouseClientExtension");
 
         typeManager.registerContext(TYPE_MANAGER_SERIALIZER_KEY, JsonLd.getObjectMapper());
@@ -238,13 +241,13 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     }
 
     private LoggingHouseWorkersManager initializeWorkersManager(ServiceExtensionContext context, LoggingHouseMessageStore store) {
-        var periodSeconds = context.getSetting(LOGGINGHOUSE_EXTENSION_WORKERS_DELAY, 30);
-        var initialDelaySeconds = context.getSetting(LOGGINGHOUSE_EXTENSION_WORKERS_PERIOD, 10);
+        var periodSeconds = context.getSetting(LOGGINGHOUSE_EXTENSION_WORKERS_DELAY, 10);
+        var initialDelaySeconds = context.getSetting(LOGGINGHOUSE_EXTENSION_WORKERS_PERIOD, 30);
         var executor = new WorkersExecutor(Duration.ofSeconds(periodSeconds), Duration.ofSeconds(initialDelaySeconds), monitor);
 
         return new LoggingHouseWorkersManager(executor,
                 monitor,
-                context.getSetting(LOGGINGHOUSE_EXTENSION_MAX_WORKERS, 1),
+                context.getSetting(LOGGINGHOUSE_EXTENSION_MAX_WORKERS, 50),
                 store,
                 dispatcherRegistry,
                 hostname,

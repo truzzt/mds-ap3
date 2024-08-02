@@ -18,7 +18,6 @@ package com.truzzt.extension.logginghouse.client.store.sql;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessage;
-import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessageStatus;
 import com.truzzt.extension.logginghouse.client.store.sql.schema.LoggingHouseEventStatements;
 import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
 import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
@@ -130,13 +129,6 @@ public class SqlLoggingHouseMessageStore extends AbstractSqlStore implements Log
             throw new EdcPersistenceException("Error eventToLog JSON column", e);
         }
 
-        LoggingHouseMessageStatus status;
-        if (resultSet.getString(statements.getReceiptColumn()) == null) {
-            status = LoggingHouseMessageStatus.PENDING;
-        } else {
-            status = LoggingHouseMessageStatus.SENT;
-        }
-
         return LoggingHouseMessage.Builder.newInstance()
                 .id(resultSet.getLong(statements.getIdColumn()))
                 .eventType(eventType)
@@ -146,7 +138,6 @@ public class SqlLoggingHouseMessageStore extends AbstractSqlStore implements Log
                 .processId(resultSet.getString(statements.getProcessIdColumn()))
                 .consumerId(resultSet.getString(statements.getConsumerIdColumn()))
                 .providerId(resultSet.getString(statements.getProviderIdColumn()))
-                .status(status)
                 .createdAt(mapToZonedDateTime(resultSet, statements.getCreatedAtColumn()))
                 .build();
     }
