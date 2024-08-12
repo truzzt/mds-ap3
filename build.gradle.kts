@@ -2,16 +2,26 @@ plugins {
     id("java")
     id("checkstyle")
     id("maven-publish")
+    id("org.sonarqube") version "4.4.1.3373"
 }
 
-dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
-    testImplementation("org.mockito:mockito-core:3.6.28")
-}
+val jupiterVersion: String by project
+val mockitoVersion: String by project
+val sonarProjectKey: String by project
+val sonarOrganization: String by project
+val sonarHostUrl: String by project
+
+val gitHubUser: String = project.findProperty("github.user") as String? ?: System.getenv("GITHUB_USER")
+val gitHubToken: String = project.findProperty("github.token") as String? ?: System.getenv("GITHUB_TOKEN")
 
 val downloadArtifact: Configuration by configurations.creating {
     isTransitive = false
+}
+
+dependencies {
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${jupiterVersion}")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}")
+    testImplementation("org.mockito:mockito-core:${mockitoVersion}")
 }
 
 allprojects {
@@ -38,6 +48,14 @@ allprojects {
         maxErrors = 0 // does not tolerate errors
     }
 
+    sonar {
+        properties {
+            property("sonar.projectKey", sonarProjectKey)
+            property("sonar.organization", sonarOrganization)
+            property("sonar.host.url", sonarHostUrl)
+        }
+    }
+
     repositories {
         mavenCentral()
         mavenLocal()
@@ -46,8 +64,8 @@ allprojects {
                 name = "GitHubPackages"
                 url = uri("https://maven.pkg.github.com/ids-basecamp/ids-infomodel-java")
                 credentials {
-                    username = System.getenv("USERNAME")
-                    password = System.getenv("TOKEN")
+                    username = gitHubUser
+                    password = gitHubToken
                 }
             }
         }
@@ -63,8 +81,8 @@ subprojects {
                 name = "GitHubPackages"
                 url = uri("https://maven.pkg.github.com/truzzt/mds-ap3")
                 credentials {
-                    username = System.getenv("USERNAME")
-                    password = System.getenv("TOKEN")
+                    username = gitHubUser
+                    password = gitHubToken
                 }
             }
         }

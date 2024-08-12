@@ -28,6 +28,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -58,24 +59,18 @@ public class LoggingHouseWorkersManager {
         this.dispatcherRegistry = dispatcherRegistry;
         this.loggingHouseUrl = loggingHouseUrl;
 
-        try {
-            connectorBaseUrl = getConnectorBaseUrl(hostname);
-        } catch (URISyntaxException e) {
-            throw new EdcException("Could not create connectorBaseUrl. Hostname can be set using:" + hostname, e);
-        }
+        connectorBaseUrl = getConnectorBaseUrl(hostname);
     }
 
     public void execute() {
-        executor.run(() -> {
-            processPending();
-        });
+        executor.run(this::processPending);
 
     }
 
-    private void processPending() {
+    void processPending() {
         List<LoggingHouseMessage> messages = store.listPending();
         if (messages.isEmpty()) {
-            monitor.warning("No Messages to send, aborting execution");
+            monitor.debug("No Messages to send, aborting execution");
             return;
         }
         monitor.debug(log("Loaded " + messages.size() + " not sent messages from store"));
@@ -94,32 +89,46 @@ public class LoggingHouseWorkersManager {
                 continue;
             }
 
-            var item = allItems.poll();
+            var item = allItems.peek();
             if (item == null) {
                 monitor.warning(log("WorkItem queue empty, abort execution"));
                 break;
             }
 
-            worker.run(item)
+            CompletableFuture<Boolean> taskFuture = worker.run(item)
                     .whenComplete((updateResponse, throwable) -> {
                         if (throwable != null) {
                             monitor.severe(log(format("Unexpected exception happened during in worker %s", worker.getId())), throwable);
                         } else {
                             monitor.info(log(format("Worker [%s] is done", worker.getId())));
+                            // Remove item only when processed successfully
+                            allItems.poll();
                         }
+                        // re-add worker for the next message
                         availableWorkers.add(worker);
                     });
+
+            // Wait for completion before processing next item
+            try {
+                taskFuture.get();
+            } catch (InterruptedException e) {
+                monitor.severe(log("Interrupted while waiting for worker to finish"), e);
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                monitor.severe(log("Unexpected exception happened during in worker"), e);
+            }
         }
     }
 
     @Nullable
-    private MessageWorker nextAvailableWorker(ArrayBlockingQueue<MessageWorker> availableWorkers) {
+    MessageWorker nextAvailableWorker(ArrayBlockingQueue<MessageWorker> availableWorkers) {
         MessageWorker worker = null;
         try {
             monitor.debug(log("Getting next available worker"));
             worker = availableWorkers.poll(1, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
-            monitor.debug("interrupted while waiting for worker to become available");
+            monitor.severe(log("Interrupted while waiting for worker to become available"), e);
+            Thread.currentThread().interrupt();
         }
         return worker;
     }
@@ -128,15 +137,27 @@ public class LoggingHouseWorkersManager {
     private ArrayBlockingQueue<MessageWorker> createWorkers(int numWorkers) {
 
         return new ArrayBlockingQueue<>(numWorkers, true, IntStream.range(0, numWorkers)
-                .mapToObj(i -> new MessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl, store))
+                .mapToObj(i -> buildMessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl, store))
                 .collect(Collectors.toList()));
+    }
+
+    MessageWorker buildMessageWorker(Monitor monitor,
+                                     RemoteMessageDispatcherRegistry dispatcherRegistry,
+                                     URI connectorBaseUrl,
+                                     URL loggingHouseUrl,
+                                     LoggingHouseMessageStore store) {
+        return new MessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl, store);
     }
 
     private String log(String input) {
         return "LoggingHouseWorkersManager: " + input;
     }
 
-    private URI getConnectorBaseUrl(Hostname hostname) throws URISyntaxException {
-        return new URI(String.format("https://%s/", hostname.get()));
+    URI getConnectorBaseUrl(Hostname hostname) {
+        try {
+            return new URI(String.format("https://%s/", hostname.get()));
+        } catch (URISyntaxException e) {
+            throw new EdcException("Could not create connectorBaseUrl. Hostname can be set using:" + hostname, e);
+        }
     }
 }
