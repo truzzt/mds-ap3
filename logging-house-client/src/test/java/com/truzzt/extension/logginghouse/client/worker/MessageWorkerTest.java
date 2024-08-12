@@ -28,14 +28,23 @@ import org.mockito.Mock;
 
 import java.util.concurrent.CompletableFuture;
 
-import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.*;
-import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.*;
-import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.*;
+import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildContractAgreement;
+import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildInitialTransferProcess;
+import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildLoggingHouseMessage;
+import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_ID;
+import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.CREATE_PROCESS_RESPONSE;
+import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.LOG_MESSAGE_RESPONSE_DATA;
+import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getConnectorBaseUrl;
+import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getLoggingHouseUrl;
+import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getRandomUuid;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class MessageWorkerTest extends BaseUnitTest {
 

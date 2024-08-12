@@ -17,9 +17,6 @@ package com.truzzt.extension.logginghouse.client.worker;
 import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessage;
 import com.truzzt.extension.logginghouse.client.tests.BaseUnitTest;
-import com.truzzt.extension.logginghouse.client.worker.LoggingHouseWorkersManager;
-import com.truzzt.extension.logginghouse.client.worker.MessageWorker;
-import com.truzzt.extension.logginghouse.client.worker.WorkersExecutor;
 import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
 import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.message.RemoteMessageDispatcherRegistry;
@@ -46,7 +43,11 @@ import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class LoggingHouseWorkersManagerTest extends BaseUnitTest {
 

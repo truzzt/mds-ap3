@@ -29,7 +29,9 @@ import org.eclipse.edc.spi.types.domain.HttpDataAddress;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
-import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.*;
+import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.CONSUMER_PARTICIPANT_ID;
+import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.COUNTER_PARTY_ADDRESS;
+import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.PROVIDER_PARTICIPANT_ID;
 import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getRandomLong;
 import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getRandomUuid;
 
