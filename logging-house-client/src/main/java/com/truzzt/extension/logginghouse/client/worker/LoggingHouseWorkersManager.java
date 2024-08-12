@@ -59,11 +59,7 @@ public class LoggingHouseWorkersManager {
         this.dispatcherRegistry = dispatcherRegistry;
         this.loggingHouseUrl = loggingHouseUrl;
 
-        try {
-            connectorBaseUrl = getConnectorBaseUrl(hostname);
-        } catch (URISyntaxException e) {
-            throw new EdcException("Could not create connectorBaseUrl. Hostname can be set using:" + hostname, e);
-        }
+        connectorBaseUrl = getConnectorBaseUrl(hostname);
     }
 
     public void execute() {
