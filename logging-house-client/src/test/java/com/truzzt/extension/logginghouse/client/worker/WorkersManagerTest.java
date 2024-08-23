@@ -45,6 +45,7 @@ import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -86,9 +87,9 @@ class WorkersManagerTest extends BaseUnitTest {
     void execute_success() {
 
         AtomicBoolean ran = new AtomicBoolean(false);
-        var task = new Runnable(){
+        var task = new Runnable() {
             @Override
-            public void run(){
+            public void run() {
                 ran.getAndSet(true);
             }
         };
@@ -107,7 +108,7 @@ class WorkersManagerTest extends BaseUnitTest {
         var scheduler = manager.execute();
         TestsHelper.sleep(5);
 
-        assertEquals(true, ran.get());
+        assertTrue(ran.get());
 
         scheduler.shutdownNow();
     }
