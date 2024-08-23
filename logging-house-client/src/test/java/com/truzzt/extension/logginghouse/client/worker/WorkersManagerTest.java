@@ -17,6 +17,7 @@ package com.truzzt.extension.logginghouse.client.worker;
 import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessage;
 import com.truzzt.extension.logginghouse.client.tests.BaseUnitTest;
+import com.truzzt.extension.logginghouse.client.tests.TestsHelper;
 import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
 import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.message.RemoteMessageDispatcherRegistry;
@@ -26,11 +27,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
-import java.net.URI;
 import java.net.URL;
+import java.time.Duration;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.truzzt.extension.logginghouse.client.tests.MockBuilder.buildHostnameMock;
 import static com.truzzt.extension.logginghouse.client.tests.MockBuilder.buildMessageWorkerMock;
@@ -41,6 +43,7 @@ import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.buildQu
 import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getLoggingHouseUrl;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -49,10 +52,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class LoggingHouseWorkersManagerTest extends BaseUnitTest {
-
-    @Mock
-    private WorkersExecutor executor;
+class WorkersManagerTest extends BaseUnitTest {
 
     @Mock
     private LoggingHouseMessageStore store;
@@ -69,9 +69,10 @@ class LoggingHouseWorkersManagerTest extends BaseUnitTest {
         hostname = buildHostnameMock();
     }
 
-    private LoggingHouseWorkersManagerWrapper buildWorkersManager(int maxWorkers, Queue<MessageWorker> workers) {
-        return new LoggingHouseWorkersManagerWrapper(executor,
-                monitor,
+    private WorkersManager buildWorkersManager(int maxWorkers, Queue<MessageWorker> workers) {
+        return new ManagerMockedWorkers(monitor,
+                null,
+                null,
                 maxWorkers,
                 store,
                 dispatcherRegistry,
@@ -81,6 +82,36 @@ class LoggingHouseWorkersManagerTest extends BaseUnitTest {
         );
     }
 
+    @Test
+    void execute_success() {
+
+        AtomicBoolean ran = new AtomicBoolean(false);
+        var task = new Runnable(){
+            @Override
+            public void run(){
+                ran.getAndSet(true);
+            }
+        };
+
+        var manager = new ManagerMockedProcess(monitor,
+                Duration.ofSeconds(1),
+                Duration.ofSeconds(0),
+                0,
+                null,
+                null,
+                hostname,
+                null,
+                task
+        );
+
+        var scheduler = manager.execute();
+        TestsHelper.sleep(5);
+
+        assertEquals(true, ran.get());
+
+        scheduler.shutdownNow();
+    }
+    
     @Test
     void processPending_successSingleMessage() {
 
@@ -197,29 +228,65 @@ class LoggingHouseWorkersManagerTest extends BaseUnitTest {
         assertThrows(EdcException.class, () -> manager.getConnectorBaseUrl(errorHostname));
     }
 
-    static class LoggingHouseWorkersManagerWrapper extends LoggingHouseWorkersManager {
+    @Test
+    void buildMessageWorker_success() {
+        var manager = new WorkersManager(monitor,
+                null,
+                null,
+                1,
+                store,
+                dispatcherRegistry,
+                hostname,
+                getLoggingHouseUrl()
+        );
+
+        var worker = manager.buildMessageWorker();
+        assertNotNull(worker);
+    }
+
+    static class ManagerMockedWorkers extends WorkersManager {
 
         private final Queue<MessageWorker> workers;
 
-        LoggingHouseWorkersManagerWrapper(WorkersExecutor executor,
-                                                 Monitor monitor,
-                                                 int maxWorkers,
-                                                 LoggingHouseMessageStore store,
-                                                 RemoteMessageDispatcherRegistry dispatcherRegistry,
-                                                 Hostname hostname,
-                                                 URL loggingHouseUrl,
-                                                 Queue<MessageWorker> workers) {
-            super(executor, monitor, maxWorkers, store, dispatcherRegistry, hostname, loggingHouseUrl);
+        ManagerMockedWorkers(Monitor monitor,
+                            Duration schedule,
+                            Duration initialDelay,
+                            int maxWorkers,
+                            LoggingHouseMessageStore store,
+                            RemoteMessageDispatcherRegistry dispatcherRegistry,
+                            Hostname hostname,
+                            URL loggingHouseUrl,
+                            Queue<MessageWorker> workers) {
+            super(monitor, schedule, initialDelay, maxWorkers, store, dispatcherRegistry, hostname, loggingHouseUrl);
             this.workers = workers;
         }
 
         @Override
-        MessageWorker buildMessageWorker(Monitor monitor,
-                                         RemoteMessageDispatcherRegistry dispatcherRegistry,
-                                         URI connectorBaseUrl,
-                                         URL loggingHouseUrl,
-                                         LoggingHouseMessageStore store) {
+        MessageWorker buildMessageWorker() {
             return workers.peek();
+        }
+    }
+
+    static class ManagerMockedProcess extends WorkersManager {
+
+        private final Runnable task;
+
+        ManagerMockedProcess(Monitor monitor,
+                             Duration schedule,
+                             Duration initialDelay,
+                             int maxWorkers,
+                             LoggingHouseMessageStore store,
+                             RemoteMessageDispatcherRegistry dispatcherRegistry,
+                             Hostname hostname,
+                             URL loggingHouseUrl,
+                             Runnable task) {
+            super(monitor, schedule, initialDelay, maxWorkers, store, dispatcherRegistry, hostname, loggingHouseUrl);
+            this.task = task;
+        }
+
+        @Override
+        void processPending() {
+            task.run();
         }
     }
 }

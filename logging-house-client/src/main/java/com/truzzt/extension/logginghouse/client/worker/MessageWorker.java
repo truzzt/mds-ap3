@@ -33,6 +33,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class MessageWorker {
+
     private final Monitor monitor;
     private final RemoteMessageDispatcherRegistry dispatcherRegistry;
     private final URI connectorBaseUrl;

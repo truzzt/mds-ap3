@@ -27,8 +27,7 @@ import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.IdsMulti
 import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.store.sql.SqlLoggingHouseMessageStore;
 import com.truzzt.extension.logginghouse.client.store.sql.schema.postgres.PostgresDialectStatements;
-import com.truzzt.extension.logginghouse.client.worker.LoggingHouseWorkersManager;
-import com.truzzt.extension.logginghouse.client.worker.WorkersExecutor;
+import com.truzzt.extension.logginghouse.client.worker.WorkersManager;
 import de.fraunhofer.iais.eis.LogMessage;
 import de.fraunhofer.iais.eis.RequestMessage;
 import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.ContractNegotiationFinalized;
@@ -126,7 +125,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     public Monitor monitor;
     private boolean enabled;
     private URL loggingHouseLogUrl;
-    private LoggingHouseWorkersManager workersManager;
+    private WorkersManager workersManager;
 
     @Override
     public String name() {
@@ -237,14 +236,15 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         monitor.debug("Registered serializers for LoggingHouseClientExtension");
     }
 
-    private LoggingHouseWorkersManager initializeWorkersManager(ServiceExtensionContext context, LoggingHouseMessageStore store) {
+    private WorkersManager initializeWorkersManager(ServiceExtensionContext context, LoggingHouseMessageStore store) {
         var periodSeconds = context.getSetting(LOGGINGHOUSE_EXTENSION_WORKERS_DELAY, 30);
         var initialDelaySeconds = context.getSetting(LOGGINGHOUSE_EXTENSION_WORKERS_PERIOD, 10);
-        var executor = new WorkersExecutor(Duration.ofSeconds(periodSeconds), Duration.ofSeconds(initialDelaySeconds), monitor);
+        var maxWorkers = context.getSetting(LOGGINGHOUSE_EXTENSION_MAX_WORKERS, 1);
 
-        return new LoggingHouseWorkersManager(executor,
-                monitor,
-                context.getSetting(LOGGINGHOUSE_EXTENSION_MAX_WORKERS, 1),
+        return new WorkersManager(monitor,
+                Duration.ofSeconds(periodSeconds),
+                Duration.ofSeconds(initialDelaySeconds),
+                maxWorkers,
                 store,
                 dispatcherRegistry,
                 hostname,

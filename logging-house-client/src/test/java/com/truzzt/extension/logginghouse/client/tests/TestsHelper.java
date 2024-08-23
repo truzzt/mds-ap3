@@ -58,6 +58,14 @@ public class TestsHelper {
 
     public static <T> ArrayBlockingQueue<T> buildQueue(List<T> items) {
         return new ArrayBlockingQueue<>(items.size(), true, items);
-
     }
+
+    public static void sleep(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            throw new EdcException("Error sleeping Thread", e);
+        }
+    }
+
 }

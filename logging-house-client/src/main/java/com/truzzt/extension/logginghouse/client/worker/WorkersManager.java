@@ -26,34 +26,40 @@ import org.jetbrains.annotations.Nullable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.lang.String.format;
 
-public class LoggingHouseWorkersManager {
+public class WorkersManager {
 
-    private final WorkersExecutor executor;
     private final Monitor monitor;
+    private final Duration schedule;
+    private final Duration initialDelay;
     private final int maxWorkers;
     private final LoggingHouseMessageStore store;
     private final RemoteMessageDispatcherRegistry dispatcherRegistry;
     private final URI connectorBaseUrl;
     private final URL loggingHouseUrl;
 
-    public LoggingHouseWorkersManager(WorkersExecutor executor,
-                                      Monitor monitor,
-                                      int maxWorkers,
-                                      LoggingHouseMessageStore store,
-                                      RemoteMessageDispatcherRegistry dispatcherRegistry,
-                                      Hostname hostname,
-                                      URL loggingHouseUrl) {
-        this.executor = executor;
+    public WorkersManager(Monitor monitor,
+                          Duration schedule,
+                          Duration initialDelay,
+                          int maxWorkers,
+                          LoggingHouseMessageStore store,
+                          RemoteMessageDispatcherRegistry dispatcherRegistry,
+                          Hostname hostname,
+                          URL loggingHouseUrl) {
         this.monitor = monitor;
+        this.schedule = schedule;
+        this.initialDelay = initialDelay;
         this.maxWorkers = maxWorkers;
         this.store = store;
         this.dispatcherRegistry = dispatcherRegistry;
@@ -62,8 +68,10 @@ public class LoggingHouseWorkersManager {
         connectorBaseUrl = getConnectorBaseUrl(hostname);
     }
 
-    public void execute() {
-        executor.run(this::processPending);
+    public ExecutorService execute() {
+        var scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate(this::processPending, initialDelay.toMillis(), schedule.toMillis(), TimeUnit.MILLISECONDS);
+        return scheduler;
     }
 
     void processPending() {
@@ -136,15 +144,11 @@ public class LoggingHouseWorkersManager {
     private ArrayBlockingQueue<MessageWorker> createWorkers(int numWorkers) {
 
         return new ArrayBlockingQueue<>(numWorkers, true, IntStream.range(0, numWorkers)
-                .mapToObj(i -> buildMessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl, store))
+                .mapToObj(i -> buildMessageWorker())
                 .collect(Collectors.toList()));
     }
 
-    MessageWorker buildMessageWorker(Monitor monitor,
-                                     RemoteMessageDispatcherRegistry dispatcherRegistry,
-                                     URI connectorBaseUrl,
-                                     URL loggingHouseUrl,
-                                     LoggingHouseMessageStore store) {
+    MessageWorker buildMessageWorker() {
         return new MessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl, store);
     }
 
