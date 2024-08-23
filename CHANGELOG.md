@@ -1,3 +1,19 @@
+# [1.1.0](https://github.com/truzzt/mds-ap3/compare/v1.0.2...v1.1.0) (2024-07-04)
+
+
+### Bug Fixes
+
+* checkstyle warnings ([dd3dd10](https://github.com/truzzt/mds-ap3/commit/dd3dd100c632a0c00f45b53ed35660a503c430ae))
+* disabled state ([88ada14](https://github.com/truzzt/mds-ap3/commit/88ada14334c37665367bf55403964114228fbfc6))
+* issue in insert statement, decode receipt ([2bbbc9a](https://github.com/truzzt/mds-ap3/commit/2bbbc9a4d9b3745bf7639b8ed5b9ddf3d6c48026))
+* remove not null constraint for TransferProcess ([e2e7187](https://github.com/truzzt/mds-ap3/commit/e2e718706f2acac36dc7bddd9528dcb555e59d57))
+* remove status parsing of not existent status column ([7650ed4](https://github.com/truzzt/mds-ap3/commit/7650ed4a052690e10846496655ced698f7206ef3))
+
+
+### Features
+
+* receive and store receipt into database ([b12aa3d](https://github.com/truzzt/mds-ap3/commit/b12aa3d020d217f25b2427a77fd0ecf35012cf2b))
+
 ## [1.0.2](https://github.com/truzzt/mds-ap3/compare/v1.0.1...v1.0.2) (2024-07-03)
 
 

@@ -11,20 +11,22 @@ val sonarProjectKey: String by project
 val sonarOrganization: String by project
 val sonarHostUrl: String by project
 
+val gitHubUser: String = project.findProperty("github.user") as String? ?: System.getenv("GITHUB_USER")
+val gitHubToken: String = project.findProperty("github.token") as String? ?: System.getenv("GITHUB_TOKEN")
+
+val downloadArtifact: Configuration by configurations.creating {
+    isTransitive = false
+}
+
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:${jupiterVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}")
     testImplementation("org.mockito:mockito-core:${mockitoVersion}")
 }
 
-val downloadArtifact: Configuration by configurations.creating {
-    isTransitive = false
-}
-
 allprojects {
     apply(plugin = "java")
     apply(plugin = "checkstyle")
-    apply(plugin = "org.sonarqube")
 
     tasks.withType<JavaCompile> {
         options.encoding = "UTF-8"
@@ -62,8 +64,8 @@ allprojects {
                 name = "GitHubPackages"
                 url = uri("https://maven.pkg.github.com/ids-basecamp/ids-infomodel-java")
                 credentials {
-                    username = System.getenv("USERNAME")
-                    password = System.getenv("TOKEN")
+                    username = gitHubUser
+                    password = gitHubToken
                 }
             }
         }
@@ -79,8 +81,8 @@ subprojects {
                 name = "GitHubPackages"
                 url = uri("https://maven.pkg.github.com/truzzt/mds-ap3")
                 credentials {
-                    username = System.getenv("USERNAME")
-                    password = System.getenv("TOKEN")
+                    username = gitHubUser
+                    password = gitHubToken
                 }
             }
         }

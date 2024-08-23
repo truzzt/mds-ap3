@@ -1,13 +1,14 @@
 plugins {
     `java-library`
     `maven-publish`
+    jacoco
 }
 
 val edcVersion: String by project
 val edcGroup: String by project
 val jupiterVersion: String by project
 val mockitoVersion: String by project
-val assertj: String by project
+val assertjVersion: String by project
 val okHttpVersion: String by project
 val jsonVersion: String by project
 
@@ -27,16 +28,25 @@ dependencies {
     implementation("org.postgresql:postgresql:42.4.5")
     implementation("org.flywaydb:flyway-core:9.0.1")
 
-    testImplementation("org.assertj:assertj-core:${assertj}")
     testImplementation("org.junit.jupiter:junit-jupiter-api:${jupiterVersion}")
-    testImplementation("org.mockito:mockito-core:${mockitoVersion}")
-    testImplementation("org.mockito:mockito-core:${mockitoVersion}")
     testImplementation("org.junit.jupiter:junit-jupiter-params:${jupiterVersion}")
+    testImplementation("org.mockito:mockito-core:${mockitoVersion}")
+    testImplementation("org.mockito:mockito-core:${mockitoVersion}")
+
+    testImplementation("${edcGroup}:core-spi:${edcVersion}")
+    testImplementation("${edcGroup}:dsp-http-spi:${edcVersion}")
+
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}")
 }
 
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
+}
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+    }
 }
 
 publishing {
