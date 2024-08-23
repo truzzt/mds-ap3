@@ -82,8 +82,12 @@ public class MessageWorker {
                 try {
                     createProcess(message, extendedProcessUrl).join();
                 } catch (Exception e) {
-                    monitor.warning("CreateProcess returned error (ignore it when the process already exists): " + e.getMessage());
-                    //throw new EdcException("Could not create process in LoggingHouse", e);
+                    if (e.getMessage().endsWith(": 400 Bad Request")) {
+                        // TODO To Improve it we need to create a new exception raised from multipart package, returning the http status
+                        monitor.warning("Ignoring process already exists error received from LoggingHouse");
+                    } else {
+                        throw new EdcException("Could not create process in LoggingHouse", e);
+                    }
                 }
             }
 

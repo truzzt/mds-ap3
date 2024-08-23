@@ -121,7 +121,7 @@ class MessageWorkerTest extends BaseUnitTest {
         var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
 
         // Mock methods calls
-        var createProcessException = new EdcException("Error");
+        var createProcessException = new EdcException("Error: 400 Bad Request");
         when(dispatcherRegistry.dispatch(eq(Object.class), any(RemoteMessage.class)))
                 .thenThrow(createProcessException);
 
@@ -139,12 +139,39 @@ class MessageWorkerTest extends BaseUnitTest {
                 .dispatch(eq(LogMessageReceipt.class), any(RemoteMessage.class));
 
         verify(monitor, times(1))
-                .warning("CreateProcess returned error (ignore it when the process already exists): " + createProcessException.getMessage());
+                .warning("Ignoring process already exists error received from LoggingHouse");
         verify(monitor, times(1))
                 .info("Received receipt successfully from LoggingHouse for message with id " + message.getEventId());
 
         verify(store, times(1))
                 .updateSent(message.getId(), logMessageReceipt.data());
+    }
+
+    @Test
+    void process_failureSendingCreateProcess() {
+        var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
+
+        var agreement = buildContractAgreement(ASSET_ID);
+        var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
+
+        // Mock methods calls
+        var createProcessException = new EdcException("Error: 500 Internal Error");
+        when(dispatcherRegistry.dispatch(eq(Object.class), any(RemoteMessage.class)))
+                .thenThrow(createProcessException);
+
+        var logMessageReceipt = new LogMessageReceipt(LOG_MESSAGE_RESPONSE_DATA);
+        when(dispatcherRegistry.dispatch(eq(LogMessageReceipt.class), any(RemoteMessage.class)))
+                .thenReturn(CompletableFuture.completedFuture(StatusResult.success(logMessageReceipt)));
+
+        // Start the test
+        var exception = assertThrows(EdcException.class, () -> worker.process(message));
+
+        // Verify test results
+        assertEquals("Could not create process in LoggingHouse", exception.getMessage());
+
+        // Verify methods calls
+        verify(dispatcherRegistry, times(1))
+                .dispatch(eq(Object.class), any(RemoteMessage.class));
     }
 
     @Test
