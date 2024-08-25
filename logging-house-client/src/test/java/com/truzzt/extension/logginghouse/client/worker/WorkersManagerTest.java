@@ -36,8 +36,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.truzzt.extension.logginghouse.client.tests.MockBuilder.buildHostnameMock;
 import static com.truzzt.extension.logginghouse.client.tests.MockBuilder.buildMessageWorkerMock;
-import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildContractAgreement;
-import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildLoggingHouseMessage;
+import static com.truzzt.extension.logginghouse.client.tests.TestDataBuilder.buildContractAgreement;
+import static com.truzzt.extension.logginghouse.client.tests.TestDataBuilder.buildLoggingHouseMessage;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_ID;
 import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.buildQueue;
 import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getLoggingHouseUrl;
@@ -65,7 +65,7 @@ class WorkersManagerTest extends BaseUnitTest {
 
     @BeforeEach
     @Override
-    public void setup() {
+    public void setup() throws Exception {
         super.setup();
         hostname = buildHostnameMock();
     }

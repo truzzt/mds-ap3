@@ -33,6 +33,7 @@ dependencies {
     testImplementation("org.mockito:mockito-core:${mockitoVersion}")
     testImplementation("org.mockito:mockito-core:${mockitoVersion}")
 
+    testImplementation("${edcGroup}:junit:${edcVersion}")
     testImplementation("${edcGroup}:core-spi:${edcVersion}")
     testImplementation("${edcGroup}:dsp-http-spi:${edcVersion}")
 

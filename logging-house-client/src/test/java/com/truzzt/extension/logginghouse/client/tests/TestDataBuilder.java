@@ -17,6 +17,7 @@ package com.truzzt.extension.logginghouse.client.tests;
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessage;
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessageStatus;
 import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
+import org.eclipse.edc.connector.contract.spi.types.negotiation.ContractNegotiation;
 import org.eclipse.edc.connector.transfer.spi.types.DataRequest;
 import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
 import org.eclipse.edc.connector.transfer.spi.types.TransferProcessStates;
@@ -35,9 +36,10 @@ import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.PROV
 import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getRandomLong;
 import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getRandomUuid;
 
-public class ResponseBuilder {
+public class TestDataBuilder {
 
-    public static LoggingHouseMessage.Builder getLoggingHouseMessageBuilder(Class<?> eventType, Object eventToLog, boolean createProcess) {
+    public static LoggingHouseMessage buildLoggingHouseMessage(Class<?> eventType, Object eventToLog, boolean createProcess) {
+
         return LoggingHouseMessage.Builder.newInstance()
                 .id(getRandomLong())
                 .eventType(eventType)
@@ -48,11 +50,7 @@ public class ResponseBuilder {
                 .processId(getRandomUuid())
                 .consumerId(CONSUMER_PARTICIPANT_ID)
                 .providerId(PROVIDER_PARTICIPANT_ID)
-                .createdAt(ZonedDateTime.now());
-    }
-
-    public static LoggingHouseMessage buildLoggingHouseMessage(Class<?> eventType, Object eventToLog, boolean createProcess) {
-        return getLoggingHouseMessageBuilder(eventType, eventToLog, createProcess)
+                .createdAt(ZonedDateTime.now())
                 .build();
     }
 
@@ -70,6 +68,17 @@ public class ResponseBuilder {
                 .contractSigningDate(ZonedDateTime.now().getNano())
                 .assetId(assetId)
                 .policy(policy)
+                .build();
+    }
+
+    public static ContractNegotiation buildContractNegotiation(ContractAgreement agreement) {
+
+        return ContractNegotiation.Builder.newInstance()
+                .id(getRandomUuid())
+                .contractAgreement(agreement)
+                .counterPartyAddress(COUNTER_PARTY_ADDRESS)
+                .counterPartyId(PROVIDER_PARTICIPANT_ID)
+                .protocol(HttpMessageProtocol.DATASPACE_PROTOCOL_HTTP)
                 .build();
     }
 

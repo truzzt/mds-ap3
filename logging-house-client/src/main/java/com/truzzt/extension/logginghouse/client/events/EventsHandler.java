@@ -31,14 +31,14 @@ import org.eclipse.edc.spi.monitor.Monitor;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
-public class LoggingHouseEventSubscriber implements EventSubscriber {
+public class EventsHandler implements EventSubscriber {
 
     private final LoggingHouseMessageStore loggingHouseMessageStore;
     private final ContractNegotiationStore contractNegotiationStore;
     private final TransferProcessStore transferProcessStore;
     private final Monitor monitor;
 
-    public LoggingHouseEventSubscriber(
+    public EventsHandler(
             LoggingHouseMessageStore loggingHouseMessageStore,
             ContractNegotiationStore contractNegotiationStore,
             TransferProcessStore transferProcessStore,
@@ -83,7 +83,7 @@ public class LoggingHouseEventSubscriber implements EventSubscriber {
         return transferProcessStore.findById(transferProcessId);
     }
 
-    public void storeContractAgreement(ContractAgreement contractAgreement) {
+    private void storeContractAgreement(ContractAgreement contractAgreement) {
         monitor.info("Storing ContractAgreement to send to LoggingHouse");
 
         var message = LoggingHouseMessage.Builder.newInstance()
@@ -100,7 +100,7 @@ public class LoggingHouseEventSubscriber implements EventSubscriber {
         loggingHouseMessageStore.save(message);
     }
 
-    public void storeTransferProcess(TransferProcess transferProcess) {
+    private void storeTransferProcess(TransferProcess transferProcess) {
         monitor.info("Storing TransferProcess to send to LoggingHouse");
 
         var message = LoggingHouseMessage.Builder.newInstance()

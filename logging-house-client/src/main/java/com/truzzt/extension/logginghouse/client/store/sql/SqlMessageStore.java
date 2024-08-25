@@ -38,16 +38,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class SqlLoggingHouseMessageStore extends AbstractSqlStore implements LoggingHouseMessageStore {
+public class SqlMessageStore extends AbstractSqlStore implements LoggingHouseMessageStore {
 
     private final LoggingHouseEventStatements statements;
 
-    public SqlLoggingHouseMessageStore(DataSourceRegistry dataSourceRegistry,
-                                       String dataSourceName,
-                                       TransactionContext transactionContext,
-                                       ObjectMapper objectMapper,
-                                       LoggingHouseEventStatements statements,
-                                       QueryExecutor queryExecutor) {
+    public SqlMessageStore(DataSourceRegistry dataSourceRegistry,
+                           String dataSourceName,
+                           TransactionContext transactionContext,
+                           ObjectMapper objectMapper,
+                           LoggingHouseEventStatements statements,
+                           QueryExecutor queryExecutor) {
         super(dataSourceRegistry, dataSourceName, transactionContext, objectMapper, queryExecutor);
         this.statements = statements;
     }

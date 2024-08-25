@@ -28,9 +28,9 @@ import org.mockito.Mock;
 
 import java.util.concurrent.CompletableFuture;
 
-import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildContractAgreement;
-import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildInitialTransferProcess;
-import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildLoggingHouseMessage;
+import static com.truzzt.extension.logginghouse.client.tests.TestDataBuilder.buildContractAgreement;
+import static com.truzzt.extension.logginghouse.client.tests.TestDataBuilder.buildInitialTransferProcess;
+import static com.truzzt.extension.logginghouse.client.tests.TestDataBuilder.buildLoggingHouseMessage;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_ID;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.CREATE_PROCESS_RESPONSE;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.LOG_MESSAGE_RESPONSE_DATA;

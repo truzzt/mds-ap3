@@ -28,7 +28,7 @@ public abstract class BaseUnitTest {
     protected AutoCloseable mocks;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws Exception {
         this.mocks = MockitoAnnotations.openMocks(this);
     }
 
