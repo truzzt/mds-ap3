@@ -1,3 +1,17 @@
+# [1.2.0-alpha.1](https://github.com/truzzt/mds-ap3/compare/v1.1.0...v1.2.0-alpha.1) (2024-08-25)
+
+
+### Bug Fixes
+
+* checkstyle warnings ([d905084](https://github.com/truzzt/mds-ap3/commit/d9050843fee3434388dc323700fe5d173b6d87d8))
+* ordering of pending statements ([810d7c1](https://github.com/truzzt/mds-ap3/commit/810d7c173f9d10da8ea6cb23f43d894588c16289))
+* special case of unordered messages, where logginghouse is shortly not available ([c49573f](https://github.com/truzzt/mds-ap3/commit/c49573fbeec32c3f92fc4182a5f8fc173ecfd8bf))
+
+
+### Features
+
+* Added CustomLoggingHouseEvent with an implementation of ConnectorAvailableEvent ([8098a5a](https://github.com/truzzt/mds-ap3/commit/8098a5ae1740afbfe3680576108caeb6a436e02b))
+
 # [1.1.0](https://github.com/truzzt/mds-ap3/compare/v1.0.2...v1.1.0) (2024-07-04)
 
 

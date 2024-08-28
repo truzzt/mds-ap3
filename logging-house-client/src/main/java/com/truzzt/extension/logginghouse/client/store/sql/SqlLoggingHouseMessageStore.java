@@ -20,9 +20,6 @@ import com.truzzt.extension.logginghouse.client.spi.store.LoggingHouseMessageSto
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessage;
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessageStatus;
 import com.truzzt.extension.logginghouse.client.store.sql.schema.LoggingHouseEventStatements;
-import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
-import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
-import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.persistence.EdcPersistenceException;
 import org.eclipse.edc.sql.QueryExecutor;
 import org.eclipse.edc.sql.store.AbstractSqlStore;
@@ -66,7 +63,7 @@ public class SqlLoggingHouseMessageStore extends AbstractSqlStore implements Log
         transactionContext.execute(() -> {
             try (var connection = getConnection()) {
                 queryExecutor.execute(connection, statements.getInsertTemplate(),
-                        event.getEventType().getSimpleName(),
+                        event.getEventType(),
                         event.getEventId(),
                         toJson(event.getEventToLog()),
                         event.getCreateProcess(),
@@ -121,15 +118,6 @@ public class SqlLoggingHouseMessageStore extends AbstractSqlStore implements Log
     }
 
     private LoggingHouseMessage mapResultSet(ResultSet resultSet) throws Exception {
-        Class eventType = toClass(resultSet.getString(statements.getEventTypeColumn()));
-
-        Object eventToLog;
-        try {
-            eventToLog = fromJson(resultSet.getString(statements.getEventToLogColumn()), eventType);
-        } catch (EdcPersistenceException e) {
-            throw new EdcPersistenceException("Error eventToLog JSON column", e);
-        }
-
         LoggingHouseMessageStatus status;
         if (resultSet.getString(statements.getReceiptColumn()) == null) {
             status = LoggingHouseMessageStatus.PENDING;
@@ -139,9 +127,9 @@ public class SqlLoggingHouseMessageStore extends AbstractSqlStore implements Log
 
         return LoggingHouseMessage.Builder.newInstance()
                 .id(resultSet.getLong(statements.getIdColumn()))
-                .eventType(eventType)
+                .eventType(resultSet.getString(statements.getEventTypeColumn()))
                 .eventId(resultSet.getString(statements.getEventIdColumn()))
-                .eventToLog(eventToLog)
+                .eventToLog(resultSet.getString(statements.getEventToLogColumn()))
                 .createProcess(resultSet.getBoolean(statements.getCreateProcessColumn()))
                 .processId(resultSet.getString(statements.getProcessIdColumn()))
                 .consumerId(resultSet.getString(statements.getConsumerIdColumn()))
@@ -150,13 +138,4 @@ public class SqlLoggingHouseMessageStore extends AbstractSqlStore implements Log
                 .createdAt(mapToZonedDateTime(resultSet, statements.getCreatedAtColumn()))
                 .build();
     }
-
-    private Class toClass(String eventType) {
-        return switch (eventType) {
-            case "ContractAgreement" -> ContractAgreement.class;
-            case "TransferProcess" -> TransferProcess.class;
-            default -> throw new EdcException("Invalid eventType: " + eventType);
-        };
-    }
-
 }
