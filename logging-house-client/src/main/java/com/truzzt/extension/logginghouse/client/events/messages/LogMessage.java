@@ -23,7 +23,7 @@ import java.net.URL;
 
 public record LogMessage(URL clearingHouseLogUrl,
                          URI connectorBaseUrl,
-                         Object eventToLog) implements RemoteMessage {
+                         String eventToLog) implements RemoteMessage {
     @Override
     public String getProtocol() {
         return ExtendedMessageProtocolClearing.IDS_EXTENDED_PROTOCOL_CLEARING;

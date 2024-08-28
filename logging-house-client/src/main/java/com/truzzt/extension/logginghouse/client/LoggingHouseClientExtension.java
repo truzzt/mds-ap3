@@ -14,6 +14,9 @@
 
 package com.truzzt.extension.logginghouse.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.truzzt.extension.logginghouse.client.events.ConnectorAvailableEvent;
+import com.truzzt.extension.logginghouse.client.events.CustomLoggingHouseEvent;
 import com.truzzt.extension.logginghouse.client.events.EventsHandler;
 import com.truzzt.extension.logginghouse.client.events.messages.CreateProcessMessageSender;
 import com.truzzt.extension.logginghouse.client.events.messages.LogMessageSender;
@@ -44,6 +47,7 @@ import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.runtime.metamodel.annotation.Requires;
 import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.asset.AssetIndex;
+import org.eclipse.edc.spi.event.EventEnvelope;
 import org.eclipse.edc.spi.event.EventRouter;
 import org.eclipse.edc.spi.http.EdcHttpClient;
 import org.eclipse.edc.spi.iam.IdentityService;
@@ -61,6 +65,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_ENABLED_SETTING;
 import static com.truzzt.extension.logginghouse.client.ConfigConstants.LOGGINGHOUSE_EXTENSION_MAX_WORKERS;
@@ -121,11 +126,14 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     private TransferProcessStore transferProcessStore;
     @Inject
     private AssetIndex assetIndex;
+    private ObjectMapper objectMapper;
 
     private Monitor monitor;
     private boolean enabled;
     private DatabaseMigrationManager flywayMigrationManager;
     private WorkersManager workersManager;
+    private URL loggingHouseLogUrl;
+    private String connectorId;
 
     @Override
     public String name() {
@@ -174,6 +182,8 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     public void initialize(ServiceExtensionContext context) {
         this.monitor = context.getMonitor();
 
+        objectMapper = new ObjectMapper();
+
         var extensionEnabled = context.getSetting(LOGGINGHOUSE_ENABLED_SETTING, true);
         if (!extensionEnabled) {
             enabled = false;
@@ -192,6 +202,8 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         registerEventSubscriber(context, store);
         registerDispatcher(context);
         workersManager = initializeWorkersManager(context, store);
+
+        connectorId = context.getConnectorId();
     }
 
     private URL readUrlFromSettings(ServiceExtensionContext context) {
@@ -236,6 +248,8 @@ public class LoggingHouseClientExtension implements ServiceExtension {
                 loggingHouseMessageStore,
                 contractNegotiationStore,
                 transferProcessStore,
+                context.getConnectorId(),
+                assetIndex,
                 monitor);
 
         eventRouter.registerSync(ContractNegotiationFinalized.class, eventsHandler);
@@ -246,6 +260,8 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         eventRouter.registerSync(TransferProcessCompleted.class, eventsHandler);
         eventRouter.registerSync(TransferProcessFailed.class, eventsHandler);
         eventRouter.registerSync(TransferProcessTerminated.class, eventsHandler);
+
+        eventRouter.registerSync(CustomLoggingHouseEvent.class, eventsHandler);
 
         context.registerService(EventsHandler.class, eventsHandler);
 
@@ -298,7 +314,7 @@ public class LoggingHouseClientExtension implements ServiceExtension {
         var httpClient = context.getService(EdcHttpClient.class);
         var objectMapper = typeManager.getMapper(TYPE_MANAGER_SERIALIZER_KEY);
 
-        var logMessageSender = new LogMessageSender(monitor, assetIndex, context.getConnectorId());
+        var logMessageSender = new LogMessageSender(monitor);
         var createProcessMessageSender = new CreateProcessMessageSender();
 
         var idsMultipartSender = new IdsMultipartSender(monitor, httpClient, identityService, objectMapper);
@@ -322,6 +338,22 @@ public class LoggingHouseClientExtension implements ServiceExtension {
 
             monitor.debug("Starting workers for LoggingHouseClientExtension");
             workersManager.execute();
+
+
+            // Sending a hello message to LoggingHouse
+            monitor.info("Sending Hello Message to LoggingHouse.");
+            var currentTime = System.currentTimeMillis();
+            ConnectorAvailableEvent connectorAvailableEvent = new ConnectorAvailableEvent(
+                    UUID.randomUUID().toString(),
+                    this.connectorId,
+                    "{\"message\": \"Hello Logginghouse\", \"connectorStartDate\": " + currentTime + "}"
+            );
+            var eventEnvelope = EventEnvelope.Builder.newInstance()
+                    .at(currentTime)
+                    .payload(connectorAvailableEvent)
+                    .build();
+            eventRouter.publish(eventEnvelope);
+            monitor.debug("'Hello Logginghouse' Event published.");
         }
     }
 
