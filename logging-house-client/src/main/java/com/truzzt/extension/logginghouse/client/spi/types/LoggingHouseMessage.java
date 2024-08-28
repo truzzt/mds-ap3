@@ -19,9 +19,9 @@ import java.util.Objects;
 
 public class LoggingHouseMessage {
     private Long id;
-    private Class<?> eventType;
+    private String eventType;
     private String eventId;
-    private Object eventToLog;
+    private String eventToLog;
     private boolean createProcess;
     private String processId;
     private String consumerId;
@@ -32,13 +32,13 @@ public class LoggingHouseMessage {
     public Long getId() {
         return id;
     }
-    public Class getEventType() {
+    public String getEventType() {
         return eventType;
     }
     public String getEventId() {
         return eventId;
     }
-    public Object getEventToLog() {
+    public String getEventToLog() {
         return eventToLog;
     }
     public boolean getCreateProcess() {
@@ -74,7 +74,7 @@ public class LoggingHouseMessage {
             this.event.id = id;
             return this;
         }
-        public LoggingHouseMessage.Builder eventType(Class eventType) {
+        public LoggingHouseMessage.Builder eventType(String eventType) {
             this.event.eventType = eventType;
             return this;
         }
@@ -82,7 +82,7 @@ public class LoggingHouseMessage {
             this.event.eventId = eventId;
             return this;
         }
-        public LoggingHouseMessage.Builder eventToLog(Object eventToLog) {
+        public LoggingHouseMessage.Builder eventToLog(String eventToLog) {
             this.event.eventToLog = eventToLog;
             return this;
         }
