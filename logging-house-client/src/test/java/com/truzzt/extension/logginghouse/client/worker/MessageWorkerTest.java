@@ -28,9 +28,7 @@ import org.mockito.Mock;
 
 import java.util.concurrent.CompletableFuture;
 
-import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildContractAgreement;
-import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildInitialTransferProcess;
-import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.buildLoggingHouseMessage;
+import static com.truzzt.extension.logginghouse.client.tests.ResponseBuilder.*;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_ID;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.CREATE_PROCESS_RESPONSE;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.LOG_MESSAGE_RESPONSE_DATA;
@@ -58,8 +56,8 @@ class MessageWorkerTest extends BaseUnitTest {
     void process_successContractAgreement() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildContractAgreement(ASSET_ID);
-        var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
+        var agreement = buildContractAgreementAsJSON(ASSET_ID);
+        var message = buildLoggingHouseMessage(ContractAgreement.class.getSimpleName(), agreement.toString(), true);
 
         // Mock methods calls
         when(dispatcherRegistry.dispatch(eq(Object.class), any(RemoteMessage.class)))
@@ -89,8 +87,8 @@ class MessageWorkerTest extends BaseUnitTest {
     void process_successTransferProcess() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var transferProcess = buildInitialTransferProcess(ASSET_ID, getRandomUuid());
-        var message = buildLoggingHouseMessage(TransferProcess.class, transferProcess, false);
+        var transferProcess = buildInitialTransferProcessAsJSON(ASSET_ID, getRandomUuid());
+        var message = buildLoggingHouseMessage(TransferProcess.class.getSimpleName(), transferProcess.toString(), false);
 
         // Mock methods calls
         var logMessageReceipt = new LogMessageReceipt(LOG_MESSAGE_RESPONSE_DATA);
@@ -117,8 +115,8 @@ class MessageWorkerTest extends BaseUnitTest {
     void process_processAlreadyExists() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildContractAgreement(ASSET_ID);
-        var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
+        var agreement = buildContractAgreementAsJSON(ASSET_ID);
+        var message = buildLoggingHouseMessage(ContractAgreement.class.getSimpleName(), agreement.toString(), true);
 
         // Mock methods calls
         var createProcessException = new EdcException("Error: 400 Bad Request");
@@ -178,8 +176,8 @@ class MessageWorkerTest extends BaseUnitTest {
     void process_failureSendingLogMessage() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildContractAgreement(ASSET_ID);
-        var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
+        var agreement = buildContractAgreementAsJSON(ASSET_ID);
+        var message = buildLoggingHouseMessage(ContractAgreement.class.getSimpleName(), agreement.toString(), true);
 
         // Mock methods calls
         when(dispatcherRegistry.dispatch(eq(Object.class), any(RemoteMessage.class)))
@@ -203,8 +201,8 @@ class MessageWorkerTest extends BaseUnitTest {
     void createProcess_success() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildContractAgreement(ASSET_ID);
-        var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
+        var agreement = buildContractAgreementAsJSON(ASSET_ID);
+        var message = buildLoggingHouseMessage(ContractAgreement.class.getSimpleName(), agreement.toString(), true);
 
         // Mock methods calls
         when(dispatcherRegistry.dispatch(eq(Object.class), any(RemoteMessage.class)))
@@ -223,8 +221,8 @@ class MessageWorkerTest extends BaseUnitTest {
     void createProcess_error() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildContractAgreement(ASSET_ID);
-        var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
+        var agreement = buildContractAgreementAsJSON(ASSET_ID);
+        var message = buildLoggingHouseMessage(ContractAgreement.class.getSimpleName(), agreement.toString(), true);
 
         // Mock methods calls
         var createProcessException = new EdcException("Error");
@@ -243,8 +241,8 @@ class MessageWorkerTest extends BaseUnitTest {
     void logMessage_success() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildContractAgreement(ASSET_ID);
-        var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
+        var agreement = buildContractAgreementAsJSON(ASSET_ID);
+        var message = buildLoggingHouseMessage(ContractAgreement.class.getSimpleName(), agreement.toString(), true);
 
         // Mock methods calls
         var logMessageReceipt = new LogMessageReceipt(LOG_MESSAGE_RESPONSE_DATA);
@@ -264,8 +262,8 @@ class MessageWorkerTest extends BaseUnitTest {
     void logMessage_error() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildContractAgreement(ASSET_ID);
-        var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
+        var agreement = buildContractAgreementAsJSON(ASSET_ID);
+        var message = buildLoggingHouseMessage(ContractAgreement.class.getSimpleName(), agreement.toString(), true);
 
         // Mock methods calls
         var logMessageException = new EdcException("Error");
