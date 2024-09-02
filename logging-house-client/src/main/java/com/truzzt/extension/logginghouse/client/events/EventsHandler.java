@@ -34,7 +34,7 @@ import org.json.JSONObject;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
-public class LoggingHouseEventSubscriber implements EventSubscriber {
+public class EventsHandler implements EventSubscriber {
 
     private final LoggingHouseMessageStore loggingHouseMessageStore;
     private final ContractNegotiationStore contractNegotiationStore;
@@ -43,10 +43,11 @@ public class LoggingHouseEventSubscriber implements EventSubscriber {
     private final AssetIndex assetIndex;
     private final Monitor monitor;
 
-    public LoggingHouseEventSubscriber(
-            LoggingHouseMessageStore loggingHouseMessageStore,
+    public EventsHandler(LoggingHouseMessageStore loggingHouseMessageStore,
             ContractNegotiationStore contractNegotiationStore,
-            TransferProcessStore transferProcessStore, String connectorId, AssetIndex assetIndex,
+            TransferProcessStore transferProcessStore,
+            String connectorId,
+            AssetIndex assetIndex,
             Monitor monitor) {
         this.loggingHouseMessageStore = loggingHouseMessageStore;
         this.contractNegotiationStore = contractNegotiationStore;
@@ -98,7 +99,7 @@ public class LoggingHouseEventSubscriber implements EventSubscriber {
         return transferProcessStore.findById(transferProcessId);
     }
 
-    public void storeContractAgreement(ContractAgreement contractAgreement) {
+    private void storeContractAgreement(ContractAgreement contractAgreement) {
         assert contractAgreement != null;
         monitor.info("Storing ContractAgreement to send to LoggingHouse");
 
@@ -144,7 +145,7 @@ public class LoggingHouseEventSubscriber implements EventSubscriber {
         loggingHouseMessageStore.save(message);
     }
 
-    public void storeTransferProcess(TransferProcess transferProcess) {
+    private void storeTransferProcess(TransferProcess transferProcess) {
         assert transferProcess != null;
 
         monitor.info("Storing TransferProcess to send to LoggingHouse");
