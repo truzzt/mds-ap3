@@ -149,8 +149,8 @@ class MessageWorkerTest extends BaseUnitTest {
     void process_failureSendingCreateProcess() {
         var worker = new MessageWorker(monitor, dispatcherRegistry, getConnectorBaseUrl(), getLoggingHouseUrl(), store);
 
-        var agreement = buildContractAgreement(ASSET_ID);
-        var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
+        var agreement = buildContractAgreementAsJSON(ASSET_ID);
+        var message = buildLoggingHouseMessage(ContractAgreement.class.getSimpleName(), agreement.toString(), true);
 
         // Mock methods calls
         var createProcessException = new EdcException("Error: 500 Internal Error");
