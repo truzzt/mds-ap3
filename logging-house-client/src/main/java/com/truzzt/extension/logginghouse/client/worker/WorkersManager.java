@@ -26,54 +26,58 @@ import org.jetbrains.annotations.Nullable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.lang.String.format;
 
-public class LoggingHouseWorkersManager {
+public class WorkersManager {
 
-    private final WorkersExecutor executor;
     private final Monitor monitor;
+    private final Duration schedule;
+    private final Duration initialDelay;
     private final int maxWorkers;
     private final LoggingHouseMessageStore store;
     private final RemoteMessageDispatcherRegistry dispatcherRegistry;
     private final URI connectorBaseUrl;
     private final URL loggingHouseUrl;
 
-    public LoggingHouseWorkersManager(WorkersExecutor executor,
-                                      Monitor monitor,
-                                      int maxWorkers,
-                                      LoggingHouseMessageStore store,
-                                      RemoteMessageDispatcherRegistry dispatcherRegistry,
-                                      Hostname hostname,
-                                      URL loggingHouseUrl) {
-        this.executor = executor;
+    public WorkersManager(Monitor monitor,
+                          Duration schedule,
+                          Duration initialDelay,
+                          int maxWorkers,
+                          LoggingHouseMessageStore store,
+                          RemoteMessageDispatcherRegistry dispatcherRegistry,
+                          Hostname hostname,
+                          URL loggingHouseUrl) {
         this.monitor = monitor;
+        this.schedule = schedule;
+        this.initialDelay = initialDelay;
         this.maxWorkers = maxWorkers;
         this.store = store;
         this.dispatcherRegistry = dispatcherRegistry;
         this.loggingHouseUrl = loggingHouseUrl;
 
-        try {
-            connectorBaseUrl = getConnectorBaseUrl(hostname);
-        } catch (URISyntaxException e) {
-            throw new EdcException("Could not create connectorBaseUrl. Hostname can be set using:" + hostname, e);
-        }
+        connectorBaseUrl = getConnectorBaseUrl(hostname);
     }
 
-    public void execute() {
-        executor.run(this::processPending);
+    public ExecutorService execute() {
+        var scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate(this::processPending, initialDelay.toMillis(), schedule.toMillis(), TimeUnit.MILLISECONDS);
+        return scheduler;
     }
 
-    private void processPending() {
+    void processPending() {
         List<LoggingHouseMessage> messages = store.listPending();
         if (messages.isEmpty()) {
-            monitor.warning("No Messages to send, aborting execution");
+            monitor.debug("No Messages to send, aborting execution");
             return;
         }
         monitor.debug(log("Loaded " + messages.size() + " not sent messages from store"));
@@ -114,6 +118,9 @@ public class LoggingHouseWorkersManager {
             // Wait for completion before processing next item
             try {
                 taskFuture.get();
+            } catch (InterruptedException e) {
+                monitor.severe(log("Interrupted while waiting for worker to finish"), e);
+                Thread.currentThread().interrupt();
             } catch (Exception e) {
                 monitor.severe(log("Unexpected exception happened during in worker"), e);
             }
@@ -121,13 +128,14 @@ public class LoggingHouseWorkersManager {
     }
 
     @Nullable
-    private MessageWorker nextAvailableWorker(ArrayBlockingQueue<MessageWorker> availableWorkers) {
+    MessageWorker nextAvailableWorker(ArrayBlockingQueue<MessageWorker> availableWorkers) {
         MessageWorker worker = null;
         try {
             monitor.debug(log("Getting next available worker"));
             worker = availableWorkers.poll(1, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
-            monitor.debug("interrupted while waiting for worker to become available");
+            monitor.severe(log("Interrupted while waiting for worker to become available"), e);
+            Thread.currentThread().interrupt();
         }
         return worker;
     }
@@ -136,15 +144,23 @@ public class LoggingHouseWorkersManager {
     private ArrayBlockingQueue<MessageWorker> createWorkers(int numWorkers) {
 
         return new ArrayBlockingQueue<>(numWorkers, true, IntStream.range(0, numWorkers)
-                .mapToObj(i -> new MessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl, store))
+                .mapToObj(i -> buildMessageWorker())
                 .collect(Collectors.toList()));
     }
 
-    private static String log(String input) {
+    MessageWorker buildMessageWorker() {
+        return new MessageWorker(monitor, dispatcherRegistry, connectorBaseUrl, loggingHouseUrl, store);
+    }
+
+    private String log(String input) {
         return "LoggingHouseWorkersManager: " + input;
     }
 
-    private URI getConnectorBaseUrl(Hostname hostname) throws URISyntaxException {
-        return new URI(String.format("https://%s/", hostname.get()));
+    URI getConnectorBaseUrl(Hostname hostname) {
+        try {
+            return new URI(String.format("https://%s/", hostname.get()));
+        } catch (URISyntaxException e) {
+            throw new EdcException("Could not create connectorBaseUrl. Hostname can be set using:" + hostname, e);
+        }
     }
 }
