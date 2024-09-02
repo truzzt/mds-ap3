@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022 Microsoft Corporation
+ *  Copyright (c) 2024 truzzt GmbH
  *
  *  This program and the accompanying materials are made available under the
  *  terms of the Apache License, Version 2.0 which is available at
@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       Microsoft Corporation - initial API and implementation
+ *       truzzt GmbH - Initial implementation
  *
  */
 
@@ -33,6 +33,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class MessageWorker {
+
     private final Monitor monitor;
     private final RemoteMessageDispatcherRegistry dispatcherRegistry;
     private final URI connectorBaseUrl;
@@ -40,7 +41,10 @@ public class MessageWorker {
     private final LoggingHouseMessageStore store;
     private final String workerId;
 
-    public MessageWorker(Monitor monitor, RemoteMessageDispatcherRegistry dispatcherRegistry, URI connectorBaseUrl, URL loggingHouseUrl,
+    public MessageWorker(Monitor monitor,
+                         RemoteMessageDispatcherRegistry dispatcherRegistry,
+                         URI connectorBaseUrl,
+                         URL loggingHouseUrl,
                          LoggingHouseMessageStore store) {
         this.monitor = monitor;
         this.dispatcherRegistry = dispatcherRegistry;
@@ -78,8 +82,12 @@ public class MessageWorker {
                 try {
                     createProcess(message, extendedProcessUrl).join();
                 } catch (Exception e) {
-                    monitor.warning("CreateProcess returned error (ignore it when the process already exists): " + e.getMessage());
-                    //throw new EdcException("Could not create process in LoggingHouse", e);
+                    if (e.getMessage().endsWith(": 400 Bad Request")) {
+                        // TODO To Improve it we need to create a new exception raised from multipart package, returning the http status
+                        monitor.warning("Ignoring process already exists error received from LoggingHouse");
+                    } else {
+                        throw new EdcException("Could not create process in LoggingHouse", e);
+                    }
                 }
             }
 
@@ -99,22 +107,22 @@ public class MessageWorker {
         }
     }
 
-    public CompletableFuture<StatusResult<Object>> createProcess(LoggingHouseMessage message, URL loggingHouseUrl) {
+    public CompletableFuture<StatusResult<Object>> createProcess(LoggingHouseMessage message, URL endpointUrl) {
 
         List<String> processOwners = new ArrayList<>();
         processOwners.add(message.getConsumerId());
         processOwners.add(message.getProviderId());
 
         monitor.info("Creating process in LoggingHouse with id: " + message.getProcessId());
-        var logMessage = new CreateProcessMessage(loggingHouseUrl, connectorBaseUrl, message.getProcessId(), processOwners);
+        var logMessage = new CreateProcessMessage(endpointUrl, connectorBaseUrl, message.getProcessId(), processOwners);
 
         return dispatcherRegistry.dispatch(Object.class, logMessage);
     }
 
-    public CompletableFuture<StatusResult<LogMessageReceipt>> logMessage(LoggingHouseMessage message, URL clearingHouseLogUrl) {
+    CompletableFuture<StatusResult<LogMessageReceipt>> logMessage(LoggingHouseMessage message, URL endpointUrl) {
 
         monitor.info("Logging message to LoggingHouse with type " + message.getEventType() + " and id " + message.getEventId());
-        var logMessage = new LogMessage(clearingHouseLogUrl, connectorBaseUrl, message.getEventToLog());
+        var logMessage = new LogMessage(endpointUrl, connectorBaseUrl, message.getEventToLog());
 
         return dispatcherRegistry.dispatch(LogMessageReceipt.class, logMessage);
     }
