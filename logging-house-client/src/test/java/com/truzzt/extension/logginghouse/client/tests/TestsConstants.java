@@ -22,11 +22,16 @@ public class TestsConstants {
 
     public static final String CONSUMER_PARTICIPANT_ID = "consumer";
 
-    public static final String ASSET_ID = "asset-" + UUID.randomUUID();
-
     public static final String COUNTER_PARTY_ADDRESS = "http://localhost:8282/protocol";
 
     public static final String CONNECTOR_BASE_URL = "https://localhost";
+
+    public static final String ASSET_ID = "asset-" + UUID.randomUUID();
+    public static final String ASSET_NAME = "Asset Name";
+    public static final String ASSET_DESCRIPTION = "Asset Description";
+    public static final String ASSET_VERSION = "0.0.1";
+    public static final String ASSET_CONTENT_TYPE = "application/json";
+    public static final String ASSET_PROPERTIES = "{}";
 
     public static final String LOGGING_HOUSE_URL = "http://localhost:7171/api";
 

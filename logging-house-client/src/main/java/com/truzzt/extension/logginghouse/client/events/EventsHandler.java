@@ -43,10 +43,11 @@ public class EventsHandler implements EventSubscriber {
     private final AssetIndex assetIndex;
     private final Monitor monitor;
 
-    public EventsHandler(
-            LoggingHouseMessageStore loggingHouseMessageStore,
+    public EventsHandler(LoggingHouseMessageStore loggingHouseMessageStore,
             ContractNegotiationStore contractNegotiationStore,
-            TransferProcessStore transferProcessStore, String connectorId, AssetIndex assetIndex,
+            TransferProcessStore transferProcessStore,
+            String connectorId,
+            AssetIndex assetIndex,
             Monitor monitor) {
         this.loggingHouseMessageStore = loggingHouseMessageStore;
         this.contractNegotiationStore = contractNegotiationStore;

@@ -14,7 +14,6 @@
 
 package com.truzzt.extension.logginghouse.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.truzzt.extension.logginghouse.client.events.ConnectorAvailableEvent;
 import com.truzzt.extension.logginghouse.client.events.CustomLoggingHouseEvent;
 import com.truzzt.extension.logginghouse.client.events.EventsHandler;
@@ -126,13 +125,11 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     private TransferProcessStore transferProcessStore;
     @Inject
     private AssetIndex assetIndex;
-    private ObjectMapper objectMapper;
 
     private Monitor monitor;
     private boolean enabled;
     private DatabaseMigrationManager flywayMigrationManager;
     private WorkersManager workersManager;
-    private URL loggingHouseLogUrl;
     private String connectorId;
 
     @Override
@@ -170,10 +167,12 @@ public class LoggingHouseClientExtension implements ServiceExtension {
 
     LoggingHouseClientExtension(Monitor monitor,
                                 boolean enabled,
+                                EventRouter eventRouter,
                                 DatabaseMigrationManager flywayMigrationManager,
                                 WorkersManager workersManager) {
         this.monitor = monitor;
         this.enabled = enabled;
+        this.eventRouter = eventRouter;
         this.flywayMigrationManager = flywayMigrationManager;
         this.workersManager = workersManager;
     }
@@ -181,8 +180,6 @@ public class LoggingHouseClientExtension implements ServiceExtension {
     @Override
     public void initialize(ServiceExtensionContext context) {
         this.monitor = context.getMonitor();
-
-        objectMapper = new ObjectMapper();
 
         var extensionEnabled = context.getSetting(LOGGINGHOUSE_ENABLED_SETTING, true);
         if (!extensionEnabled) {

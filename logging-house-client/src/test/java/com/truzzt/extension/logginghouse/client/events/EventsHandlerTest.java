@@ -7,6 +7,7 @@ import org.eclipse.edc.connector.contract.spi.event.contractnegotiation.Contract
 import org.eclipse.edc.connector.contract.spi.negotiation.store.ContractNegotiationStore;
 import org.eclipse.edc.connector.transfer.spi.event.TransferProcessInitiated;
 import org.eclipse.edc.connector.transfer.spi.store.TransferProcessStore;
+import org.eclipse.edc.spi.asset.AssetIndex;
 import org.eclipse.edc.spi.event.EventEnvelope;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import static com.truzzt.extension.logginghouse.client.tests.TestDataBuilder.bui
 import static com.truzzt.extension.logginghouse.client.tests.TestDataBuilder.buildContractNegotiation;
 import static com.truzzt.extension.logginghouse.client.tests.TestDataBuilder.buildInitialTransferProcess;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_ID;
+import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.PROVIDER_PARTICIPANT_ID;
 import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getRandomUuid;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -39,12 +41,17 @@ public class EventsHandlerTest extends BaseUnitTest {
     @Mock
     private TransferProcessStore transferProcessStore;
 
+    @Mock
+    private AssetIndex assetIndex;
+
     @Test
     public void onContractNegotiationFinalized_success() {
 
         var handler = new EventsHandler(loggingHouseMessageStore,
                 contractNegotiationStore,
                 transferProcessStore,
+                PROVIDER_PARTICIPANT_ID,
+                assetIndex,
                 monitor);
 
         var agreement = buildContractAgreement(ASSET_ID);
@@ -81,6 +88,8 @@ public class EventsHandlerTest extends BaseUnitTest {
         var handler = new EventsHandler(loggingHouseMessageStore,
                 contractNegotiationStore,
                 transferProcessStore,
+                PROVIDER_PARTICIPANT_ID,
+                assetIndex,
                 monitor);
 
         var transferProcess = buildInitialTransferProcess(ASSET_ID, getRandomUuid());

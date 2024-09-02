@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.truzzt.extension.logginghouse.client.tests.MockBuilder.buildHostnameMock;
 import static com.truzzt.extension.logginghouse.client.tests.MockBuilder.buildMessageWorkerMock;
-import static com.truzzt.extension.logginghouse.client.tests.TestDataBuilder.buildContractAgreement;
+import static com.truzzt.extension.logginghouse.client.tests.TestDataBuilder.buildContractAgreementAsJSON;
 import static com.truzzt.extension.logginghouse.client.tests.TestDataBuilder.buildLoggingHouseMessage;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_ID;
 import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.buildQueue;
@@ -122,8 +122,8 @@ class WorkersManagerTest extends BaseUnitTest {
 
         var manager = buildWorkersManager(workers.size(), workers);
 
-        var agreement = buildContractAgreement(ASSET_ID);
-        var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
+        var agreement = buildContractAgreementAsJSON(ASSET_ID);
+        var message = buildLoggingHouseMessage(ContractAgreement.class.getSimpleName(), agreement.toString(), true);
 
         // Mock methods calls
         when(store.listPending()).thenReturn(List.of(message));
@@ -146,11 +146,11 @@ class WorkersManagerTest extends BaseUnitTest {
 
         var manager = buildWorkersManager(workers.size(), workers);
 
-        var agreement1 = buildContractAgreement(ASSET_ID);
-        var message1 = buildLoggingHouseMessage(ContractAgreement.class, agreement1, true);
+        var agreement1 = buildContractAgreementAsJSON(ASSET_ID);
+        var message1 = buildLoggingHouseMessage(ContractAgreement.class.getSimpleName(), agreement1.toString(), true);
 
-        var agreement2 = buildContractAgreement(ASSET_ID);
-        var message2 = buildLoggingHouseMessage(ContractAgreement.class, agreement2, true);
+        var agreement2 = buildContractAgreementAsJSON(ASSET_ID);
+        var message2 = buildLoggingHouseMessage(ContractAgreement.class.getSimpleName(), agreement2.toString(), true);
 
         // Mock methods calls
         when(store.listPending()).thenReturn(List.of(message1, message2));

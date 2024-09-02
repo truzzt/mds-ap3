@@ -14,6 +14,7 @@
 
 package com.truzzt.extension.logginghouse.client.tests;
 
+import com.truzzt.extension.logginghouse.client.multipart.ids.multipart.CalendarUtil;
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessage;
 import com.truzzt.extension.logginghouse.client.spi.types.LoggingHouseMessageStatus;
 import org.eclipse.edc.connector.contract.spi.types.agreement.ContractAgreement;
@@ -26,10 +27,16 @@ import org.eclipse.edc.policy.model.PolicyType;
 import org.eclipse.edc.protocol.dsp.spi.types.HttpMessageProtocol;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.spi.types.domain.HttpDataAddress;
+import org.json.JSONObject;
 
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
+import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_CONTENT_TYPE;
+import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_DESCRIPTION;
+import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_NAME;
+import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_PROPERTIES;
+import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_VERSION;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.CONSUMER_PARTICIPANT_ID;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.COUNTER_PARTY_ADDRESS;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.PROVIDER_PARTICIPANT_ID;
@@ -38,8 +45,7 @@ import static com.truzzt.extension.logginghouse.client.tests.TestsHelper.getRand
 
 public class TestDataBuilder {
 
-    public static LoggingHouseMessage buildLoggingHouseMessage(Class<?> eventType, Object eventToLog, boolean createProcess) {
-
+    public static LoggingHouseMessage buildLoggingHouseMessage(String eventType, String eventToLog, boolean createProcess) {
         return LoggingHouseMessage.Builder.newInstance()
                 .id(getRandomLong())
                 .eventType(eventType)
@@ -110,5 +116,45 @@ public class TestDataBuilder {
                 .updatedAt(ZonedDateTime.now().getNano())
                 .dataRequest(dataRequest)
                 .build();
+    }
+
+    public static JSONObject buildContractAgreementAsJSON(String assetId) {
+        var json = new JSONObject();
+
+        var policy = Policy.Builder.newInstance().target(assetId).type(PolicyType.SET).build();
+
+        json.put("Timestamp", CalendarUtil.gregorianNow().toString());
+        json.put("ConnectorId", CONSUMER_PARTICIPANT_ID);
+
+        json.put("AssetId", assetId);
+        json.put("AssetName", ASSET_NAME);
+        json.put("AssetDescription", ASSET_DESCRIPTION);
+        json.put("AssetVersion", ASSET_VERSION);
+        json.put("AssetContentType", ASSET_CONTENT_TYPE);
+        json.put("AssetProperties", ASSET_PROPERTIES);
+
+        json.put("ContractAgreementId", UUID.randomUUID().toString());
+        json.put("ContractProviderId", PROVIDER_PARTICIPANT_ID);
+        json.put("ContractConsumerId", CONSUMER_PARTICIPANT_ID);
+        json.put("ContractSigningDate", CalendarUtil.gregorianNow().toString());
+        json.put("ContractPolicy", policy);
+
+        return json;
+    }
+
+    public static JSONObject buildInitialTransferProcessAsJSON(String assetId, String contractAgreementId) {
+        var json = new JSONObject();
+
+        json.put("Timestamp", CalendarUtil.gregorianNow().toString());
+        json.put("ConnectorId", CONSUMER_PARTICIPANT_ID);
+
+        json.put("TransferProcessId", UUID.randomUUID().toString());
+        json.put("TransferState", TransferProcessStates.INITIAL);
+        json.put("TransferProtocol", HttpMessageProtocol.DATASPACE_PROTOCOL_HTTP);
+        json.put("TransferContractId", contractAgreementId);
+        json.put("TransferConnectorId", PROVIDER_PARTICIPANT_ID);
+        json.put("TransferAssetId", assetId);
+
+        return json;
     }
 }

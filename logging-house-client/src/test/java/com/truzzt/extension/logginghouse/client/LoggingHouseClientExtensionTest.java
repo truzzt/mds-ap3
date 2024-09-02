@@ -109,7 +109,7 @@ public class LoggingHouseClientExtensionTest extends BaseUnitTest {
     @Test
     public void start_enabled() {
 
-        var extension = new LoggingHouseClientExtension(monitor, true, flywayMigrationManager, workersManager);
+        var extension = new LoggingHouseClientExtension(monitor, true, eventRouter, flywayMigrationManager, workersManager);
 
         // Start the test
         extension.start();
@@ -122,7 +122,7 @@ public class LoggingHouseClientExtensionTest extends BaseUnitTest {
     @Test
     public void start_disabled() {
 
-        var extension = new LoggingHouseClientExtension(monitor, false, flywayMigrationManager, workersManager);
+        var extension = new LoggingHouseClientExtension(monitor, false, eventRouter, flywayMigrationManager, workersManager);
 
         // Start the test
         extension.start();

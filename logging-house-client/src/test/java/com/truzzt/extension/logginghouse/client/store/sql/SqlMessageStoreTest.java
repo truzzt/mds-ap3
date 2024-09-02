@@ -16,7 +16,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.util.List;
 
-import static com.truzzt.extension.logginghouse.client.tests.TestDataBuilder.buildContractAgreement;
+import static com.truzzt.extension.logginghouse.client.tests.TestDataBuilder.buildContractAgreementAsJSON;
 import static com.truzzt.extension.logginghouse.client.tests.TestDataBuilder.buildLoggingHouseMessage;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.ASSET_ID;
 import static com.truzzt.extension.logginghouse.client.tests.TestsConstants.LOG_MESSAGE_RESPONSE_DATA;
@@ -68,8 +68,8 @@ public class SqlMessageStoreTest extends BaseUnitTest {
                 statements,
                 queryExecutor);
 
-        var agreement = buildContractAgreement(ASSET_ID);
-        var message = buildLoggingHouseMessage(ContractAgreement.class, agreement, true);
+        var agreement = buildContractAgreementAsJSON(ASSET_ID);
+        var message = buildLoggingHouseMessage(ContractAgreement.class.getSimpleName(), agreement.toString(), true);
 
         // Start the test
         store.save(message);
@@ -78,7 +78,7 @@ public class SqlMessageStoreTest extends BaseUnitTest {
         verify(queryExecutor, times(1))
                 .execute(any(Connection.class),
                         eq(statements.getInsertTemplate()),
-                        eq(message.getEventType().getSimpleName()),
+                        eq(message.getEventType()),
                         eq(message.getEventId()),
                         any(String.class),
                         eq(message.getCreateProcess()),
@@ -99,11 +99,11 @@ public class SqlMessageStoreTest extends BaseUnitTest {
                 statements,
                 queryExecutor);
 
-        var agreement1 = buildContractAgreement(ASSET_ID);
-        var message1 = buildLoggingHouseMessage(ContractAgreement.class, agreement1, true);
+        var agreement1 = buildContractAgreementAsJSON(ASSET_ID);
+        var message1 = buildLoggingHouseMessage(ContractAgreement.class.getSimpleName(), agreement1.toString(), true);
 
-        var agreement2 = buildContractAgreement(ASSET_ID);
-        var message2 = buildLoggingHouseMessage(ContractAgreement.class, agreement2, true);
+        var agreement2 = buildContractAgreementAsJSON(ASSET_ID);
+        var message2 = buildLoggingHouseMessage(ContractAgreement.class.getSimpleName(), agreement2.toString(), true);
 
         var messages = List.of(message1, message2);
 
